@@ -12,11 +12,12 @@ import { useCallback, useEffect, useState } from "react";
 import { deleteProducts, getProducts } from "../../service/product.service";
 import Toast from "../toast/ErrorToast";
 import { IPagination } from "../../interface/common.interface";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { IToastMessage } from "../../interface/toast.interface";
 import { IMAGE_URL } from "../../lib/envVariable";
 
 export default function ProductTable() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<IPagination<IProduct>>({
     totalRecords: 0,
     data: [],
@@ -214,7 +215,11 @@ export default function ProductTable() {
 
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                 {products?.data?.map((order) => (
-                  <TableRow key={order._id}>
+                  <TableRow
+                    onClick={() => navigate(`/produk/form/${order._id}`)}
+                    key={order._id}
+                    className="cursor-pointer odd:bg-gray-50 dark:odd:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                  >
                     <TableCell className="w-1/4 px-3 py-4 text-start overflow-hidden">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 overflow-hidden rounded-full flex-shrink-0">

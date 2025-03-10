@@ -9,6 +9,7 @@ import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import { useNavigate } from "react-router";
+import LoadingToast from "../../components/loading/ToastLoading";
 
 interface Product {
   _id: string;
@@ -45,6 +46,7 @@ interface SelectedProduct {
 
 export default function TransactionForm() {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState<Option[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
     []
@@ -168,8 +170,10 @@ export default function TransactionForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     if (selectedProducts.length === 0) {
+      setIsLoading(false);
       setToastMessage({
         message: "Pilih setidaknya satu produk!",
         type: "error",
@@ -194,10 +198,13 @@ export default function TransactionForm() {
       setSelectedProducts([]); // Reset form
       navigate("/");
     } catch {
+      setIsLoading(false);
       setToastMessage({
         message: "Gagal menyimpan transaksi.",
         type: "error",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -209,6 +216,7 @@ export default function TransactionForm() {
       />
       <PageBreadcrumb pageTitle="Transaksi Baru" />
       <ComponentCard title="Transaksi Baru">
+        <LoadingToast message="Menyimpan transaksi..." isLoading={isLoading} />
         <div className="p-6 bg-white rounded-lg shadow-md max-w-3xl mx-auto">
           <h1 className="text-xl font-bold mb-4">Input Transaksi</h1>
 
@@ -301,8 +309,9 @@ export default function TransactionForm() {
             <button
               onClick={handleSubmit}
               className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition"
+              disabled={isLoading}
             >
-              Simpan Transaksi
+              {isLoading ? "Menyimpan..." : "Simpan Transaksi"}
             </button>
           </div>
         </div>

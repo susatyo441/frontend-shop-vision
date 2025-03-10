@@ -21,9 +21,11 @@ import {
   IProductPhoto,
   IProductVariant,
 } from "../../interface/product.inteface";
+import LoadingToast from "../../components/loading/ToastLoading";
 
 export default function FormProductUpdate() {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const { productId } = useParams<{ productId: string }>();
   const [variants, setVariants] = useState<IProductVariant[]>([]);
   const [isVariant, setIsVariant] = useState(false);
@@ -48,8 +50,10 @@ export default function FormProductUpdate() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     if (files.some((file) => file === null)) {
+      setIsLoading(false);
       setToastMessage({
         message: "Harap upload semua 5 gambar.",
         type: "error",
@@ -62,6 +66,7 @@ export default function FormProductUpdate() {
       !formData.category ||
       (!isVariant && (!formData.stock || !price))
     ) {
+      setIsLoading(false);
       setToastMessage({
         message: "Harap isi semua field wajib",
         type: "error",
@@ -84,6 +89,7 @@ export default function FormProductUpdate() {
       );
 
       if (hasEmptyField) {
+        setIsLoading(false);
         setToastMessage({
           message: "Harap isi semua field varians",
           type: "error",
@@ -128,7 +134,10 @@ export default function FormProductUpdate() {
       });
       navigate("/produk");
     } catch {
+      setIsLoading(false);
       setToastMessage({ message: "Gagal memperbarui produk", type: "error" });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -227,6 +236,8 @@ export default function FormProductUpdate() {
       />
       <PageBreadcrumb pageTitle="Form Product" />
       <ComponentCard title="Isi Data Produk">
+        {/* Tampilkan Loading Toast */}
+        <LoadingToast message="Menyimpan produk..." isLoading={isLoading} />
         {toastMessage.message != "" && (
           <>
             {console.log("Toast Message:", toastMessage)}
@@ -385,7 +396,9 @@ export default function FormProductUpdate() {
             )}
             <ImageUploader files={files} onFileChange={setFiles} />
             <div className="mt-8 flex justify-end">
-              <Button variant="primary">Simpan Produk</Button>
+              <Button variant="primary" disabled={isLoading}>
+                {isLoading ? "Menyimpan..." : "Simpan Produk"}
+              </Button>
             </div>
           </div>
         </form>
