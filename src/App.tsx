@@ -10,7 +10,8 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import FormProduct from "./pages/Forms/FormProduct";
 import FormProductUpdate from "./pages/Forms/FormProductUpdate";
-import TransactionForm from "./pages/Forms/FormTransaction";
+import TransactionFormPage from "./pages/Forms/FormTransactionPage";
+import CaptureProduct from "./pages/Video/VideoStream";
 
 export default function App() {
   return (
@@ -27,9 +28,15 @@ export default function App() {
             <Route path="/calendar" element={<Calendar />} />
 
             {/* Transactions */}
-            <Route path="/transactions" element={<TransactionForm />} />
+            <Route path="/transactions" element={<TransactionFormPage />} />
 
-            <Route path="/transactions/create" element={<TransactionForm />} />
+            <Route
+              path="/transactions/create"
+              element={<TransactionFormPage />}
+            />
+
+            {/* Video Stream */}
+            <Route path="/capture" element={<CaptureProduct />} />
 
             {/* Products */}
             <Route path="/produk" element={<ProductTables />} />

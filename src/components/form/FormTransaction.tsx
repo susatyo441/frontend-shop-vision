@@ -6,8 +6,6 @@ import Toast from "../../components/toast/ErrorToast";
 import { createTransaction } from "../../service/transaction.service";
 import { ICreateTransaction } from "../../interface/transaction.interface";
 import ComponentCard from "../../components/common/ComponentCard";
-import PageMeta from "../../components/common/PageMeta";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import { useNavigate } from "react-router";
 import LoadingToast from "../../components/loading/ToastLoading";
 
@@ -209,113 +207,106 @@ export default function TransactionForm() {
   };
 
   return (
-    <div>
-      <PageMeta
-        title="React.js Form Elements Dashboard | TailAdmin - React.js Admin Dashboard Template"
-        description="This is React.js Form Elements  Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
-      />
-      <PageBreadcrumb pageTitle="Transaksi Baru" />
-      <ComponentCard title="Transaksi Baru">
-        <LoadingToast message="Menyimpan transaksi..." isLoading={isLoading} />
-        <div className="p-6 bg-white rounded-lg shadow-md max-w-3xl mx-auto">
-          <h1 className="text-xl font-bold mb-4">Input Transaksi</h1>
+    <ComponentCard title="Transaksi Baru">
+      <LoadingToast message="Menyimpan transaksi..." isLoading={isLoading} />
+      <div className="p-6 bg-white rounded-lg shadow-md max-w-3xl mx-auto">
+        <h1 className="text-xl font-bold mb-4">Input Transaksi</h1>
 
-          {toastMessage.message != "" && (
-            <Toast
-              message={toastMessage.message}
-              type={toastMessage.type}
-              onClose={() => setToastMessage({ type: undefined, message: "" })}
-            />
-          )}
+        {toastMessage.message != "" && (
+          <Toast
+            message={toastMessage.message}
+            type={toastMessage.type}
+            onClose={() => setToastMessage({ type: undefined, message: "" })}
+          />
+        )}
 
-          <div className="mb-4">
-            <label className="block font-medium mb-2">Pilih Produk</label>
-            <Select
-              options={products}
-              isMulti
-              placeholder="Cari produk..."
-              onInputChange={(value) => setSearch(value)}
-              onChange={(options) => handleProductSelect(options as Option[])}
-              getOptionValue={(option) => option.value}
-            />
-          </div>
-
-          {/* Tabel Produk Terpilih */}
-          {selectedProducts.length > 0 && (
-            <div className="mb-4">
-              <h2 className="font-medium mb-2">Produk Terpilih</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300 text-xs sm:text-sm min-w-[500px]">
-                  <thead className="bg-gray-100">
-                    <tr className="whitespace-nowrap">
-                      <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2 text-left">
-                        Nama Produk
-                      </th>
-                      <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
-                        Harga Satuan
-                      </th>
-                      <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
-                        Jumlah
-                      </th>
-                      <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
-                        Subtotal
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedProducts.map((product) => (
-                      <tr key={product._id} className="whitespace-nowrap">
-                        <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
-                          {product.name}
-                        </td>
-                        <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
-                          Rp {product.price.toLocaleString()}
-                        </td>
-                        <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
-                          <input
-                            type="number"
-                            inputMode="numeric"
-                            className="w-12 sm:w-16 border rounded p-0.5 text-center"
-                            min={1}
-                            max={product.stock}
-                            value={inputValues[product._id] ?? ""}
-                            onChange={(e) =>
-                              handleInputChange(product._id, e.target.value)
-                            }
-                            onBlur={() => handleQuantityBlur(product._id)}
-                          />
-                        </td>
-                        <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
-                          Rp {product.subtotal.toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Total Harga */}
-          <div className="flex justify-end items-center gap-4 text-lg font-semibold">
-            <span>Total:</span>
-            <span className="text-blue-600">
-              Rp {totalAmount.toLocaleString()}
-            </span>
-          </div>
-
-          {/* Tombol Simpan */}
-          <div className="mt-6 flex justify-end">
-            <button
-              onClick={handleSubmit}
-              className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition"
-              disabled={isLoading}
-            >
-              {isLoading ? "Menyimpan..." : "Simpan Transaksi"}
-            </button>
-          </div>
+        <div className="mb-4">
+          <label className="block font-medium mb-2">Pilih Produk</label>
+          <Select
+            options={products}
+            isMulti
+            placeholder="Cari produk..."
+            onInputChange={(value) => setSearch(value)}
+            onChange={(options) => handleProductSelect(options as Option[])}
+            getOptionValue={(option) => option.value}
+          />
         </div>
-      </ComponentCard>
-    </div>
+
+        {/* Tabel Produk Terpilih */}
+        {selectedProducts.length > 0 && (
+          <div className="mb-4">
+            <h2 className="font-medium mb-2">Produk Terpilih</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 text-xs sm:text-sm min-w-[500px]">
+                <thead className="bg-gray-100">
+                  <tr className="whitespace-nowrap">
+                    <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2 text-left">
+                      Nama Produk
+                    </th>
+                    <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
+                      Harga Satuan
+                    </th>
+                    <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
+                      Jumlah
+                    </th>
+                    <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
+                      Subtotal
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedProducts.map((product) => (
+                    <tr key={product._id} className="whitespace-nowrap">
+                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
+                        {product.name}
+                      </td>
+                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
+                        Rp {product.price.toLocaleString()}
+                      </td>
+                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          className="w-12 sm:w-16 border rounded p-0.5 text-center"
+                          min={1}
+                          max={product.stock}
+                          value={inputValues[product._id] ?? ""}
+                          onChange={(e) =>
+                            handleInputChange(product._id, e.target.value)
+                          }
+                          onBlur={() => handleQuantityBlur(product._id)}
+                        />
+                      </td>
+                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
+                        Rp {product.subtotal.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Total Harga */}
+        <div className="flex justify-end items-center gap-4 text-lg font-semibold">
+          <span>Total:</span>
+          <span className="text-blue-600">
+            Rp {totalAmount.toLocaleString()}
+          </span>
+        </div>
+
+        {/* Tombol Simpan */}
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={handleSubmit}
+            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition"
+            disabled={isLoading}
+          >
+            {isLoading ? "Menyimpan..." : "Simpan Transaksi"}
+          </button>
+        </div>
+      </div>
+    </ComponentCard>
   );
 }
