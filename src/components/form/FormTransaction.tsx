@@ -17,6 +17,10 @@ interface Product {
   variants?: Variant[];
 }
 
+interface TransactionFormProps {
+  defaultSelectedProducts?: SelectedProduct[];
+}
+
 interface Variant {
   name: string;
   price: number;
@@ -31,7 +35,7 @@ interface Option {
   variantName: string | null; // null kalau tidak pakai variant
 }
 
-interface SelectedProduct {
+export interface SelectedProduct {
   _id: string; // productID atau productID|variantName (untuk input tracking)
   productID: string;
   name: string;
@@ -42,14 +46,25 @@ interface SelectedProduct {
   subtotal: number;
 }
 
-export default function TransactionForm() {
+export default function TransactionForm({
+  defaultSelectedProducts = [],
+}: TransactionFormProps) {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState<Option[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
-    []
+    defaultSelectedProducts
   );
-  const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
+  const [inputValues, setInputValues] = useState<{ [key: string]: string }>(
+    () => {
+      // Inisialisasi awal dengan nilai quantity dari product
+      const initialValues: { [key: string]: string } = {};
+      selectedProducts.forEach((product) => {
+        initialValues[product._id] = product.quantity.toString();
+      });
+      return initialValues;
+    }
+  );
 
   const [toastMessage, setToastMessage] = useState<IToastMessage>({
     type: undefined,
@@ -270,7 +285,10 @@ export default function TransactionForm() {
                           className="w-12 sm:w-16 border rounded p-0.5 text-center"
                           min={1}
                           max={product.stock}
-                          value={inputValues[product._id] ?? ""}
+                          value={
+                            inputValues[product._id] ||
+                            product.quantity.toString()
+                          }
                           onChange={(e) =>
                             handleInputChange(product._id, e.target.value)
                           }

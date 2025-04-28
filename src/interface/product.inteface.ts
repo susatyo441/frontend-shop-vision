@@ -10,6 +10,8 @@ export interface IProduct {
   coverPhoto: string;
   photos?: IProductPhoto[];
   variants: IProductVariant[];
+  quantity?: number; // Optional, only if needed for the product
+  subtotal?: number; // Optional, only if needed for the product
 }
 
 export interface IProductVariant {

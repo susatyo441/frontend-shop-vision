@@ -5,6 +5,7 @@ export interface ICreateTransaction {
 export interface ICreateTransactionAttr {
   productID: string;
   quantity: number;
+  variantName?: string | null;
 }
 
 export interface ITransactionProductAttr {
