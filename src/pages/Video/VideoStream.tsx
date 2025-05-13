@@ -12,12 +12,39 @@ export default function CaptureProduct() {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
   const [isCapturing, setIsCapturing] = useState(false);
-  const [showResults, setShowResults] = useState(false);
   const [progress, setProgress] = useState(0);
   const captureTimeout = useRef<number | null>(null);
   const progressInterval = useRef<number | null>(null);
   const [nSend, setNSend] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCaptureFinished, setIsCaptureFinished] = useState(false);
+
+  useEffect(() => {
+    const requestCameraAccess = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
+        // Setelah mendapatkan izin, Anda dapat menghentikan stream jika belum diperlukan
+        stream.getTracks().forEach((track) => track.stop());
+      } catch (err) {
+        console.error("Gagal mendapatkan akses kamera:", err);
+      }
+    };
+
+    // Tambahkan event listener untuk interaksi pengguna pertama
+    const handleUserInteraction = () => {
+      requestCameraAccess();
+      // Hapus event listener setelah permintaan dilakukan
+      window.removeEventListener("click", handleUserInteraction);
+    };
+
+    window.addEventListener("click", handleUserInteraction);
+
+    return () => {
+      window.removeEventListener("click", handleUserInteraction);
+    };
+  }, []);
 
   useEffect(() => {
     const getDevices = async () => {
@@ -32,7 +59,7 @@ export default function CaptureProduct() {
   }, []);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8000/ws/video/");
+    const ws = new WebSocket("ws://192.168.115.144:8000/ws/video/");
     wsRef.current = ws;
 
     ws.onopen = () => console.log("WebSocket connected");
@@ -41,47 +68,49 @@ export default function CaptureProduct() {
       const response = JSON.parse(event.data);
       console.log(response);
 
-      if (response.data) {
+      if (response?.status == 200) {
         // Transformasi data produk ke bentuk SelectedProduct
-        const transformedProducts = response.data.flatMap(
-          (product: IProduct) => {
-            // Jika produk memiliki varian
-            if (product.variants && product.variants.length > 0) {
-              const variant = product.variants[0];
-              return {
-                _id: `${product._id}|${variant.name}`, // Gabung productID dan variantName
-                productID: product._id,
-                name: `${product.name} - ${variant.name}`,
-                price: variant.price,
-                stock: variant.stock,
-                variantName: variant.name,
-                quantity: product.quantity,
-                subtotal: variant.price * (product.quantity || 1),
-              };
+        if (response.data) {
+          const transformedProducts = response.data.flatMap(
+            (product: IProduct) => {
+              // Jika produk memiliki varian
+              if (product.variants && product.variants.length > 0) {
+                const variant = product.variants[0];
+                return {
+                  _id: `${product._id}|${variant.name}`, // Gabung productID dan variantName
+                  productID: product._id,
+                  name: `${product.name} - ${variant.name}`,
+                  price: variant.price,
+                  stock: variant.stock,
+                  variantName: variant.name,
+                  quantity: product.quantity,
+                  subtotal: variant.price * (product.quantity || 1),
+                };
+              }
+              // Jika produk tidak memiliki varian
+              else {
+                return {
+                  _id: product._id,
+                  productID: product._id,
+                  name: product.name,
+                  price: product.price,
+                  stock: product.stock,
+                  variantName: null,
+                  quantity: product.quantity, // Default quantity
+                  subtotal: (product.quantity || 1) * product.price, // Default subtotal
+                };
+              }
             }
-            // Jika produk tidak memiliki varian
-            else {
-              return {
-                _id: product._id,
-                productID: product._id,
-                name: product.name,
-                price: product.price,
-                stock: product.stock,
-                variantName: null,
-                quantity: product.quantity, // Default quantity
-                subtotal: (product.quantity || 1) * product.price, // Default subtotal
-              };
-            }
-          }
-        );
+          );
 
-        setProducts(transformedProducts);
+          setProducts(transformedProducts);
+        }
+
         setNSend((prev) => {
           const next = prev - 1;
           console.log(next);
           if (next === 0) {
             setIsLoading(false);
-            setShowResults(true);
           }
           return next;
         });
@@ -111,7 +140,6 @@ export default function CaptureProduct() {
 
   const startCapture = () => {
     setIsCapturing(true);
-    setShowResults(false);
     setProgress(0);
 
     const startTime = Date.now();
@@ -134,66 +162,63 @@ export default function CaptureProduct() {
 
     if (nSend > 0) {
       setIsLoading(true); // tampilkan loading sampai frame terakhir diproses
-    } else {
-      setShowResults(true); // langsung tampilkan hasil jika tidak ada frame dalam proses
     }
+    setIsCaptureFinished(true);
   };
 
   useEffect(() => {
     if (!isCapturing) return;
-    const interval = setInterval(() => {
-      if (!videoRef.current || !canvasRef.current || !wsRef.current?.readyState)
-        return;
 
+    // interval ~30fps → 1000ms/30 ≈ 33ms
+    const interval = setInterval(() => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
+      const ws = wsRef.current;
+      if (!video || !canvas || ws?.readyState !== WebSocket.OPEN) return;
+
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      // Set canvas size to 640x640
+      // resize & draw
       canvas.width = 640;
       canvas.height = 640;
-
-      // Draw video frame stretched to 640x640
       ctx.drawImage(
         video,
-        0, // source X
-        0, // source Y
-        video.videoWidth, // source width
-        video.videoHeight, // source height
-        0, // destination X
-        0, // destination Y
-        640, // destination width
-        640 // destination height
+        0,
+        0,
+        video.videoWidth,
+        video.videoHeight,
+        0,
+        0,
+        640,
+        640
       );
 
       canvas.toBlob((blob) => {
-        if (blob && wsRef.current?.readyState === WebSocket.OPEN) {
-          setNSend((prev) => {
-            console.log("nSend setelah increment:", prev + 1);
-            return prev + 1;
-          });
-
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const base64 = (reader.result as string).split(",")[1];
-            wsRef.current?.send(JSON.stringify({ frame: base64 }));
-          };
-          reader.readAsDataURL(blob);
-        }
+        if (!blob) return;
+        setNSend((prev) => {
+          console.log("nSend setelah increment:", prev + 1);
+          return prev + 1;
+        });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = (reader.result as string).split(",")[1];
+          ws.send(JSON.stringify({ frame: base64 }));
+        };
+        reader.readAsDataURL(blob);
       }, "image/jpeg");
-    }, 500);
+    }, 100);
 
     return () => clearInterval(interval);
-  }, [isCapturing]);
+  }, [isCapturing, wsRef]);
 
   return (
     <div className="p-4 max-w-md mx-auto">
       <h1 className="text-2xl font-semibold mb-4 text-center">
-        📷 Product Detection Story
+        Deteksi Produk
       </h1>
 
-      {!showResults && (
+      {!isCaptureFinished && (
         <div>
           <div className="mb-4">
             <label htmlFor="camera" className="block mb-2 font-medium">
@@ -213,13 +238,19 @@ export default function CaptureProduct() {
             </select>
           </div>
 
-          <div className="relative w-full aspect-video rounded overflow-hidden">
-            <video ref={videoRef} className="w-full rounded shadow" />
+          <div className="relative w-full h-[600px] max-h-[80vh] rounded overflow-hidden">
+            <video
+              ref={videoRef}
+              className="h-full w-auto mx-auto rounded shadow object-cover"
+              playsInline
+              muted
+            />
 
             <button
               onMouseDown={startCapture}
               onMouseUp={stopCapture}
-              onClick={() => setTimeout(stopCapture, 200)}
+              onTouchStart={startCapture}
+              onTouchEnd={stopCapture}
               className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full border-4 border-white bg-red-500 flex items-center justify-center shadow-md z-20"
             >
               {isCapturing ? (
@@ -236,7 +267,9 @@ export default function CaptureProduct() {
                       strokeDashoffset={2 * Math.PI * 28 * (1 - progress / 100)}
                     />
                   </svg>
-                  <span className="text-white font-bold">⏺</span>
+                  <span className="text-white font-bold pointer-events-none select-none">
+                    ⏺
+                  </span>
                 </div>
               ) : (
                 "●"
@@ -245,27 +278,42 @@ export default function CaptureProduct() {
           </div>
 
           <canvas ref={canvasRef} className="hidden" />
-
-          {isLoading && (
-            <div className="mt-6 text-center text-gray-500">
-              ⏳ Menunggu hasil analisis {nSend} frame lagi...
-            </div>
-          )}
         </div>
       )}
 
-      {showResults && (
+      {isCaptureFinished && (
         <div>
+          {isLoading && (
+            <div className="mt-6 text-center">
+              <div className="inline-flex flex-col items-center space-y-2">
+                {/* Spinner Container */}
+                <div className="relative w-12 h-12 animate-spin">
+                  {/* Outer Circle */}
+                  <div className="absolute w-full h-full border-4 border-blue-200 rounded-full"></div>
+                  {/* Inner Arc */}
+                  <div className="absolute w-full h-full border-4 border-transparent border-t-blue-600 rounded-full"></div>
+                </div>
+
+                {/* Text dengan animasi */}
+                <div className="text-gray-600 text-sm">
+                  <span className="animate-pulse">🔄 Memproses</span>
+                  <br />
+                  <span className="text-xs text-gray-500">
+                    Menunggu hasil analisis {nSend} frame...
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
           <TransactionForm defaultSelectedProducts={products} />
-          <button
-            onClick={() => {
-              setShowResults(false);
-              setProducts([]);
-            }}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            🔁 Capture Again
-          </button>
+          {!isLoading && (
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              🔁 Capture Again
+            </button>
+          )}
         </div>
       )}
     </div>

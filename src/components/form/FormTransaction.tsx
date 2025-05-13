@@ -73,6 +73,19 @@ export default function TransactionForm({
   const [search, setSearch] = useState<string>("");
 
   useEffect(() => {
+    // Update selectedProducts ketika defaultSelectedProducts berubah
+    setSelectedProducts(defaultSelectedProducts);
+
+    // Update inputValues sesuai dengan quantity terbaru
+    const newInputValues = defaultSelectedProducts.reduce((acc, product) => {
+      acc[product._id] = product.quantity.toString();
+      return acc;
+    }, {} as { [key: string]: string });
+
+    setInputValues(newInputValues);
+  }, [defaultSelectedProducts]);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       fetchProducts(search);
     }, 300); // debounce 300ms
