@@ -3,6 +3,8 @@ import TransactionForm, {
   SelectedProduct,
 } from "../../components/form/FormTransaction";
 import { IProduct } from "../../interface/product.inteface";
+import { ML_URL } from "../../lib/envVariable";
+import { getProductDetail } from "../../service/product.service";
 
 export default function CaptureProduct() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -18,6 +20,7 @@ export default function CaptureProduct() {
   const [nSend, setNSend] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isCaptureFinished, setIsCaptureFinished] = useState(false);
+  const productCacheRef = useRef<Record<string, IProduct>>({});
 
   useEffect(() => {
     const requestCameraAccess = async () => {
@@ -59,62 +62,64 @@ export default function CaptureProduct() {
   }, []);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://192.168.115.144:8000/ws/video/");
+    const ws = new WebSocket(`wss://${ML_URL}/ws`);
     wsRef.current = ws;
 
     ws.onopen = () => console.log("WebSocket connected");
 
-    ws.onmessage = (event) => {
+    ws.onmessage = async (event) => {
       const response = JSON.parse(event.data);
-      console.log(response);
+      if (response?.status !== 200 || !response.data) return;
 
-      if (response?.status == 200) {
-        // Transformasi data produk ke bentuk SelectedProduct
-        if (response.data) {
-          const transformedProducts = response.data.flatMap(
-            (product: IProduct) => {
-              // Jika produk memiliki varian
-              if (product.variants && product.variants.length > 0) {
-                const variant = product.variants[0];
-                return {
-                  _id: `${product._id}|${variant.name}`, // Gabung productID dan variantName
-                  productID: product._id,
-                  name: `${product.name} - ${variant.name}`,
-                  price: variant.price,
-                  stock: variant.stock,
-                  variantName: variant.name,
-                  quantity: product.quantity,
-                  subtotal: variant.price * (product.quantity || 1),
-                };
-              }
-              // Jika produk tidak memiliki varian
-              else {
-                return {
-                  _id: product._id,
-                  productID: product._id,
-                  name: product.name,
-                  price: product.price,
-                  stock: product.stock,
-                  variantName: null,
-                  quantity: product.quantity, // Default quantity
-                  subtotal: (product.quantity || 1) * product.price, // Default subtotal
-                };
-              }
-            }
-          );
+      const newProducts: SelectedProduct[] = [];
 
-          setProducts(transformedProducts);
+      for (const { id, quantity } of response.data) {
+        // Cek apakah produk sudah ada di cache
+        if (!productCacheRef.current[id]) {
+          try {
+            const productDetail = await getProductDetail(id);
+            productCacheRef.current[id] = productDetail;
+          } catch (err) {
+            console.error("Failed to fetch product detail:", err);
+            continue;
+          }
         }
 
-        setNSend((prev) => {
-          const next = prev - 1;
-          console.log(next);
-          if (next === 0) {
-            setIsLoading(false);
-          }
-          return next;
-        });
+        const product = productCacheRef.current[id];
+
+        // Jika ada varian
+        if (product.variants && product.variants.length > 0) {
+          const variant = product.variants[0];
+          newProducts.push({
+            _id: `${product._id}|${variant.name}`,
+            productID: product._id,
+            name: `${product.name} - ${variant.name}`,
+            price: variant.price,
+            stock: variant.stock,
+            variantName: variant.name,
+            quantity,
+            subtotal: variant.price * quantity,
+          });
+        } else {
+          newProducts.push({
+            _id: product._id,
+            productID: product._id,
+            name: product.name,
+            price: product.price,
+            stock: product.stock,
+            variantName: null,
+            quantity,
+            subtotal: product.price * quantity,
+          });
+        }
       }
+
+      setProducts(newProducts);
+      setNSend((prev) => {
+        const next = prev - 1;
+        if (next === 0) setIsLoading(false);
+        return next;
+      });
     };
 
     return () => wsRef.current?.close();

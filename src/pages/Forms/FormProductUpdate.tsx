@@ -156,7 +156,7 @@ export default function FormProductUpdate() {
           })
         );
         setCategories(categoryOptions);
-        const { data } = await getProductDetail(productId!);
+        const data = await getProductDetail(productId!);
 
         setFormData({
           name: data.name,

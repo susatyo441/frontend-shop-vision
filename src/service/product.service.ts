@@ -1,6 +1,7 @@
 import axios from "axios";
 import { getAuthToken } from "../lib/localStorage";
 import { API_URL } from "../lib/envVariable";
+import { IProduct } from "../interface/product.inteface";
 
 export const getProducts = async (
   page: number,
@@ -99,7 +100,7 @@ export const deleteProducts = async (ids: string[]) => {
   }
 };
 
-export const getProductDetail = async (id: string) => {
+export const getProductDetail = async (id: string): Promise<IProduct> => {
   try {
     const response = await axios.get(`${API_URL}/product/${id}`, {
       headers: {
@@ -107,7 +108,7 @@ export const getProductDetail = async (id: string) => {
       },
     });
 
-    return response.data;
+    return response.data.data;
   } catch (error: unknown) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       localStorage.removeItem("token"); // Hapus token
