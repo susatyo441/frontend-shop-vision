@@ -1,0 +1,10 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔧 Building project..."
+npm run build || exit 1
+
+echo "📦 Zipping dist/..."
+powershell Compress-Archive -Path dist\* -DestinationPath dist.zip -Force
+
+git add dist.zip

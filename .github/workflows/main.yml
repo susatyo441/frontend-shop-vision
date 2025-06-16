@@ -20,13 +20,13 @@ jobs:
 
       - name: Deploy to Azure VM
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.AZURE_USER }}@${{ secrets.AZURE_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZURE_USER }}@${{ secrets.AZURE_HOST }} << EOF
             cd ${{ secrets.AZURE_REPO_PATH }}
             sudo git pull
-            sudo npm install
-            sudo npm run build
-
-            sudo rm -rf ${ secrets.AZURE_DEPLOY_PATH }/*
+            sudo rm -rf dist/*
+            unzip dist.zip
+            
+            sudo rm -rf ${{ secrets.AZURE_DEPLOY_PATH }}/*
             sudo mv dist/* ${{ secrets.AZURE_DEPLOY_PATH }}
             sudo systemctl restart nginx
           EOF
