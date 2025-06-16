@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import TransactionForm, {
   SelectedProduct,
 } from "../../components/form/FormTransaction";
@@ -6,10 +6,18 @@ import { IProduct } from "../../interface/product.inteface";
 import { ML_URL } from "../../lib/envVariable";
 import { getProductDetail } from "../../service/product.service";
 
-export default function CaptureProduct() {
+interface CaptureProductProps {
+  onResetRequest: () => void;
+}
+
+export default function CaptureProduct({
+  onResetRequest,
+}: CaptureProductProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const longPressTimeout = useRef<number | null>(null);
+  const [isLongPress, setIsLongPress] = useState(false);
   const [products, setProducts] = useState<SelectedProduct[]>([]);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
@@ -20,33 +28,70 @@ export default function CaptureProduct() {
   const [nSend, setNSend] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isCaptureFinished, setIsCaptureFinished] = useState(false);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
   const productCacheRef = useRef<Record<string, IProduct>>({});
+  const barcodeAudioRef = useRef<HTMLAudioElement | null>(null);
+  const previousProductsRef = useRef<SelectedProduct[]>([]);
 
   useEffect(() => {
     const requestCameraAccess = async () => {
       try {
+        // Minta izin untuk kamera belakang secara spesifik
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+          video: {
+            facingMode: "environment", // Spesifikasi kamera belakang
+          },
         });
-        // Setelah mendapatkan izin, Anda dapat menghentikan stream jika belum diperlukan
+
+        // Setelah mendapatkan izin, hentikan stream
         stream.getTracks().forEach((track) => track.stop());
+
+        // Setelah izin diberikan, reload daftar perangkat
+        const allDevices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = allDevices.filter((d) => d.kind === "videoinput");
+        setDevices(videoDevices);
+
+        // Coba temukan kamera belakang untuk dipilih secara otomatis
+        const rearCamera = videoDevices.find((device) => {
+          const label = device.label.toLowerCase();
+          return (
+            label.includes("back") ||
+            label.includes("rear") ||
+            label.includes("environment")
+          );
+        });
+
+        if (rearCamera) {
+          setSelectedDeviceId(rearCamera.deviceId);
+        } else if (videoDevices.length > 0) {
+          setSelectedDeviceId(videoDevices[0].deviceId);
+        }
       } catch (err) {
-        console.error("Gagal mendapatkan akses kamera:", err);
+        console.error("Gagal mendapatkan akses kamera belakang:", err);
+
+        // Fallback ke kamera depan jika kamera belakang tidak tersedia
+        try {
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+          });
+          fallbackStream.getTracks().forEach((track) => track.stop());
+
+          const allDevices = await navigator.mediaDevices.enumerateDevices();
+          const videoDevices = allDevices.filter(
+            (d) => d.kind === "videoinput"
+          );
+          setDevices(videoDevices);
+
+          if (videoDevices.length > 0) {
+            setSelectedDeviceId(videoDevices[0].deviceId);
+          }
+        } catch (fallbackErr) {
+          console.error("Gagal mendapatkan akses kamera:", fallbackErr);
+        }
       }
     };
 
-    // Tambahkan event listener untuk interaksi pengguna pertama
-    const handleUserInteraction = () => {
-      requestCameraAccess();
-      // Hapus event listener setelah permintaan dilakukan
-      window.removeEventListener("click", handleUserInteraction);
-    };
-
-    window.addEventListener("click", handleUserInteraction);
-
-    return () => {
-      window.removeEventListener("click", handleUserInteraction);
-    };
+    requestCameraAccess();
   }, []);
 
   useEffect(() => {
@@ -62,6 +107,10 @@ export default function CaptureProduct() {
   }, []);
 
   useEffect(() => {
+    barcodeAudioRef.current = new Audio("/sounds/store-scanner-beep-90395.mp3"); // Pastikan file ini tersedia di public folder
+  }, []);
+
+  useEffect(() => {
     const ws = new WebSocket(`wss://${ML_URL}/ws`);
     wsRef.current = ws;
 
@@ -74,7 +123,6 @@ export default function CaptureProduct() {
       const newProducts: SelectedProduct[] = [];
 
       for (const { id, quantity } of response.data) {
-        // Cek apakah produk sudah ada di cache
         if (!productCacheRef.current[id]) {
           try {
             const productDetail = await getProductDetail(id);
@@ -87,7 +135,6 @@ export default function CaptureProduct() {
 
         const product = productCacheRef.current[id];
 
-        // Jika ada varian
         if (product.variants && product.variants.length > 0) {
           const variant = product.variants[0];
           newProducts.push({
@@ -114,7 +161,28 @@ export default function CaptureProduct() {
         }
       }
 
+      // 🔍 DETEKSI PRODUK BARU ATAU QUANTITY BERUBAH
+      const previous = previousProductsRef.current;
+      let hasNewProduct = false;
+
+      for (const newP of newProducts) {
+        const old = previous.find((p) => p._id === newP._id);
+        if (!old || old.quantity !== newP.quantity) {
+          hasNewProduct = true;
+          break;
+        }
+      }
+
+      if (hasNewProduct && barcodeAudioRef.current) {
+        console.log("Playing barcode beep sound");
+        barcodeAudioRef.current.play().catch((e) => {
+          console.warn("Gagal memutar suara:", e);
+        });
+      }
+
+      previousProductsRef.current = newProducts;
       setProducts(newProducts);
+
       setNSend((prev) => {
         const next = prev - 1;
         if (next === 0) setIsLoading(false);
@@ -132,6 +200,9 @@ export default function CaptureProduct() {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { deviceId: { exact: selectedDeviceId } },
         });
+
+        cameraStreamRef.current = stream;
+
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.play();
@@ -143,95 +214,137 @@ export default function CaptureProduct() {
     initCamera();
   }, [selectedDeviceId]);
 
+  const stopCamera = () => {
+    const stream = cameraStreamRef.current;
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      cameraStreamRef.current = null;
+    }
+  };
+
+  const takeAndSendFrame = useCallback(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const ws = wsRef.current;
+    if (!video || !canvas || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    canvas.width = 640;
+    canvas.height = 640;
+    ctx.drawImage(
+      video,
+      0,
+      0,
+      video.videoWidth,
+      video.videoHeight,
+      0,
+      0,
+      640,
+      640
+    );
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      setNSend((prev) => {
+        console.log("nSend after increment:", prev + 1);
+        return prev + 1;
+      });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = (reader.result as string).split(",")[1];
+        ws.send(JSON.stringify({ frame: base64 }));
+      };
+      reader.readAsDataURL(blob);
+    }, "image/jpeg");
+  }, []);
+
   const startCapture = () => {
-    setIsCapturing(true);
-    setProgress(0);
+    // Mulai timeout untuk deteksi long press
+    longPressTimeout.current = window.setTimeout(() => {
+      setIsLongPress(true);
+      setIsCapturing(true);
+      setProgress(0);
 
-    const startTime = Date.now();
-    progressInterval.current = window.setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const percentage = Math.min((elapsed / 15000) * 100, 100);
-      setProgress(percentage);
-    }, 100);
+      const startTime = Date.now();
+      progressInterval.current = window.setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const percentage = Math.min((elapsed / 15000) * 100, 100);
+        setProgress(percentage);
+      }, 100);
 
-    captureTimeout.current = window.setTimeout(() => {
-      stopCapture();
-    }, 15000);
+      captureTimeout.current = window.setTimeout(() => {
+        stopCapture();
+      }, 15000);
+    }, 300); // Threshold 300ms untuk long press
   };
 
   const stopCapture = () => {
-    setIsCapturing(false);
-    setProgress(0);
-    if (captureTimeout.current) clearTimeout(captureTimeout.current);
-    if (progressInterval.current) clearInterval(progressInterval.current);
+    // Bersihkan timeout long press
+    if (longPressTimeout.current) {
+      clearTimeout(longPressTimeout.current);
+      longPressTimeout.current = null;
+    }
 
-    if (nSend > 0) {
-      setIsLoading(true); // tampilkan loading sampai frame terakhir diproses
+    if (isLongPress) {
+      // Long press: hentikan capture berulang
+      setIsLongPress(false);
+      setIsCapturing(false);
+      setProgress(0);
+      if (captureTimeout.current) clearTimeout(captureTimeout.current);
+      if (progressInterval.current) clearInterval(progressInterval.current);
+    } else {
+      // Short press: kirim satu frame
+      takeAndSendFrame();
     }
     setIsCaptureFinished(true);
+    stopCamera();
   };
 
+  // Hapus interval long press saat komponen unmount
   useEffect(() => {
+    return () => {
+      if (longPressTimeout.current) {
+        clearTimeout(longPressTimeout.current);
+      }
+      stopCamera();
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log("isCapturing:", isCapturing);
     if (!isCapturing) return;
 
     // interval ~30fps → 1000ms/30 ≈ 33ms
     const interval = setInterval(() => {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const ws = wsRef.current;
-      if (!video || !canvas || ws?.readyState !== WebSocket.OPEN) return;
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      // resize & draw
-      canvas.width = 640;
-      canvas.height = 640;
-      ctx.drawImage(
-        video,
-        0,
-        0,
-        video.videoWidth,
-        video.videoHeight,
-        0,
-        0,
-        640,
-        640
-      );
-
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        setNSend((prev) => {
-          console.log("nSend setelah increment:", prev + 1);
-          return prev + 1;
-        });
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = (reader.result as string).split(",")[1];
-          ws.send(JSON.stringify({ frame: base64 }));
-        };
-        reader.readAsDataURL(blob);
-      }, "image/jpeg");
+      takeAndSendFrame();
     }, 100);
 
     return () => clearInterval(interval);
-  }, [isCapturing, wsRef]);
+  }, [isCapturing, takeAndSendFrame]);
+
+  const radius = 28; // Adjusted radius to fit design
+  const circumference = 2 * Math.PI * radius;
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <h1 className="text-2xl font-semibold mb-4 text-center">
-        Deteksi Produk
+    <div className="p-4 max-w-md mx-auto bg-gray-50 min-h-screen">
+      <h1 className="text-2xl font-bold mb-4 text-center text-gray-800">
+        Product Detection
       </h1>
 
       {!isCaptureFinished && (
         <div>
           <div className="mb-4">
-            <label htmlFor="camera" className="block mb-2 font-medium">
+            <label
+              htmlFor="camera"
+              className="block mb-2 font-medium text-gray-700"
+            >
               Select Camera:
             </label>
             <select
               id="camera"
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={selectedDeviceId}
               onChange={(e) => setSelectedDeviceId(e.target.value)}
             >
@@ -243,81 +356,122 @@ export default function CaptureProduct() {
             </select>
           </div>
 
-          <div className="relative w-full h-[600px] max-h-[80vh] rounded overflow-hidden">
+          <div className="relative w-full h-[600px] max-h-[80vh] rounded-xl overflow-hidden bg-black shadow-xl">
             <video
               ref={videoRef}
-              className="h-full w-auto mx-auto rounded shadow object-cover"
+              className="h-full w-full object-cover"
               playsInline
               muted
             />
 
-            <button
-              onMouseDown={startCapture}
-              onMouseUp={stopCapture}
-              onTouchStart={startCapture}
-              onTouchEnd={stopCapture}
-              className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full border-4 border-white bg-red-500 flex items-center justify-center shadow-md z-20"
-            >
-              {isCapturing ? (
-                <div className="relative w-full h-full flex items-center justify-center">
-                  <svg className="absolute w-16 h-16">
-                    <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
-                      stroke="#fff"
-                      strokeWidth="4"
-                      fill="none"
-                      strokeDasharray={2 * Math.PI * 28}
-                      strokeDashoffset={2 * Math.PI * 28 * (1 - progress / 100)}
-                    />
-                  </svg>
-                  <span className="text-white font-bold pointer-events-none select-none">
-                    ⏺
-                  </span>
-                </div>
-              ) : (
-                "●"
-              )}
-            </button>
-          </div>
+            <canvas ref={canvasRef} className="hidden" />
 
-          <canvas ref={canvasRef} className="hidden" />
+            {/* Instagram-style capture button */}
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-24 h-24 flex items-center justify-center">
+              {/* Progress ring container - expands when capturing */}
+              <div
+                className={`
+                  absolute w-full h-full
+                  transition-all duration-300 ease-in-out
+                  ${isCapturing ? "scale-150" : "scale-100"}
+                `}
+              >
+                <svg
+                  className="w-full h-full transform -rotate-90"
+                  viewBox="0 0 80 80"
+                >
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r={radius}
+                    stroke="rgba(255,255,255,0.3)"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r={radius}
+                    stroke="#ef4444"
+                    strokeWidth="4"
+                    fill="none"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={
+                      circumference - (progress / 100) * circumference
+                    }
+                    strokeLinecap="round"
+                    className="transition-all duration-100 ease-linear"
+                  />
+                </svg>
+              </div>
+
+              {/* Capture button */}
+              <button
+                onMouseDown={startCapture}
+                onMouseUp={stopCapture}
+                onTouchStart={startCapture}
+                onTouchEnd={stopCapture}
+                className={`
+                  absolute w-16 h-16 rounded-full bg-white focus:outline-none
+                  flex items-center justify-center transition-all duration-200
+                  ${isCapturing ? "scale-90 bg-red-500" : "hover:scale-105"}
+                `}
+              >
+                {isCapturing ? (
+                  <div className="w-8 h-8 rounded bg-red-600" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-gray-400" />
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       {isCaptureFinished && (
-        <div>
+        <div className="mt-6">
           {isLoading && (
-            <div className="mt-6 text-center">
-              <div className="inline-flex flex-col items-center space-y-2">
-                {/* Spinner Container */}
-                <div className="relative w-12 h-12 animate-spin">
-                  {/* Outer Circle */}
-                  <div className="absolute w-full h-full border-4 border-blue-200 rounded-full"></div>
-                  {/* Inner Arc */}
-                  <div className="absolute w-full h-full border-4 border-transparent border-t-blue-600 rounded-full"></div>
+            <div className="text-center py-8">
+              <div className="inline-flex flex-col items-center space-y-4">
+                <div className="relative w-16 h-16">
+                  <div className="absolute w-full h-full border-4 border-red-100 rounded-full"></div>
+                  <div className="absolute w-full h-full border-4 border-transparent border-t-red-500 rounded-full animate-spin"></div>
                 </div>
-
-                {/* Text dengan animasi */}
-                <div className="text-gray-600 text-sm">
-                  <span className="animate-pulse">🔄 Memproses</span>
+                <div className="text-gray-700">
+                  <span className="animate-pulse font-medium">
+                    Processing your capture
+                  </span>
                   <br />
-                  <span className="text-xs text-gray-500">
-                    Menunggu hasil analisis {nSend} frame...
+                  <span className="text-sm text-gray-500">
+                    Analyzing {nSend} frame{nSend !== 1 ? "s" : ""}...
                   </span>
                 </div>
               </div>
             </div>
           )}
+
           <TransactionForm defaultSelectedProducts={products} />
           {!isLoading && (
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              🔁 Capture Again
-            </button>
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={onResetRequest} // Panggil callback dari parent
+                className="px-5 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full shadow-md hover:from-red-600 hover:to-red-700 transition-all flex items-center font-medium"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Capture Again
+              </button>
+            </div>
           )}
         </div>
       )}

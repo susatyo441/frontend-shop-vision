@@ -11,7 +11,7 @@ import Home from "./pages/Dashboard/Home";
 import FormProduct from "./pages/Forms/FormProduct";
 import FormProductUpdate from "./pages/Forms/FormProductUpdate";
 import TransactionFormPage from "./pages/Forms/FormTransactionPage";
-import CaptureProduct from "./pages/Video/VideoStream";
+import VideoStreamPage from "./pages/Video/VideoStreamPage";
 
 export default function App() {
   return (
@@ -36,7 +36,7 @@ export default function App() {
             />
 
             {/* Video Stream */}
-            <Route path="/capture" element={<CaptureProduct />} />
+            <Route path="/capture" element={<VideoStreamPage />} />
 
             {/* Products */}
             <Route path="/produk" element={<ProductTables />} />
