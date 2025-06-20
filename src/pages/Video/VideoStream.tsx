@@ -26,6 +26,7 @@ export default function CaptureProduct({
   const captureTimeout = useRef<number | null>(null);
   const progressInterval = useRef<number | null>(null);
   const [nSend, setNSend] = useState(0);
+  const [averageFPS, setAverageFPS] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isCaptureFinished, setIsCaptureFinished] = useState(false);
   const cameraStreamRef = useRef<MediaStream | null>(null);
@@ -119,7 +120,7 @@ export default function CaptureProduct({
     ws.onmessage = async (event) => {
       const response = JSON.parse(event.data);
       if (response?.status !== 200 || !response.data) return;
-
+      setAverageFPS(response.averageFPS);
       const newProducts: SelectedProduct[] = [];
 
       for (const { id, quantity } of response.data) {
@@ -223,6 +224,7 @@ export default function CaptureProduct({
   };
 
   const takeAndSendFrame = useCallback(() => {
+    setIsLoading(true);
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const ws = wsRef.current;
@@ -452,25 +454,31 @@ export default function CaptureProduct({
 
           <TransactionForm defaultSelectedProducts={products} />
           {!isLoading && (
-            <div className="mt-6 flex justify-center">
-              <button
-                onClick={onResetRequest} // Panggil callback dari parent
-                className="px-5 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full shadow-md hover:from-red-600 hover:to-red-700 transition-all flex items-center font-medium"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+            <div>
+              <div className="mt-4 text-center text-sm text-gray-500">
+                ⏱️ Average Processing FPS:{" "}
+                <span className="font-semibold">{averageFPS}</span>
+              </div>
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={onResetRequest} // Panggil callback dari parent
+                  className="px-5 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full shadow-md hover:from-red-600 hover:to-red-700 transition-all flex items-center font-medium"
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Capture Again
-              </button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Capture Again
+                </button>
+              </div>
             </div>
           )}
         </div>
