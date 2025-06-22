@@ -113,7 +113,7 @@ export default function TransactionForm({
           if (product.variants && product.variants.length > 0) {
             return product.variants.map((variant) => ({
               value: `${product._id}|${variant.name}`, // Gabung productID|variantName
-              label: `${product.name} - ${variant.name} (Stok: ${variant.stock})`,
+              label: `${product.name} - ${variant.name}`,
               price: variant.price,
               stock: variant.stock,
               productID: product._id,
@@ -122,7 +122,7 @@ export default function TransactionForm({
           } else {
             return {
               value: product._id,
-              label: `${product.name} (Stok: ${product.stock ?? 0})`,
+              label: `${product.name}`,
               price: product.price ?? 0,
               stock: product.stock ?? 0,
               productID: product._id,
@@ -301,8 +301,18 @@ export default function TransactionForm({
   return (
     <ComponentCard title="Transaksi Baru">
       <LoadingToast message="Menyimpan transaksi..." isLoading={isLoading} />
-      <div className="p-6 bg-white rounded-lg shadow-md max-w-3xl mx-auto">
-        <h1 className="text-xl font-bold mb-4">Input Transaksi</h1>
+      <div className="p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">
+        <div className="text-center mb-6">
+          <h1 className="text-xl font-bold">Input Transaksi</h1>
+          <div className="text-sm text-gray-500 mt-1">
+            {new Date().toLocaleDateString("id-ID", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </div>
+        </div>
 
         {toastMessage.message != "" && (
           <Toast
@@ -312,131 +322,140 @@ export default function TransactionForm({
           />
         )}
 
-        <div className="mb-4">
-          <label className="block font-medium mb-2">Pilih Produk</label>
+        {/* Search and Product Selection */}
+        <div className="mb-6">
+          <label className="block font-medium mb-2">Cari & Tambah Produk</label>
           <Select
             options={products}
             isMulti
-            value={selectedOptions} // Gunakan state baru ini
+            value={selectedOptions}
             placeholder="Cari produk..."
             onInputChange={(value) => setSearch(value)}
             onChange={(options) => handleProductSelect(options as Option[])}
             getOptionValue={(option) => option.value}
+            className="w-full"
           />
         </div>
 
-        {/* Tabel Produk Terpilih */}
+        {/* Receipt-style Product List */}
         {selectedProducts.length > 0 && (
-          <div className="mb-4">
-            <h2 className="font-medium mb-3">Produk Terpilih</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-300 text-xs sm:text-sm min-w-[500px]">
-                <thead className="bg-gray-100">
-                  <tr className="whitespace-nowrap">
-                    <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2 text-left">
-                      Nama Produk
-                    </th>
-                    <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
-                      Harga
-                    </th>
-                    <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2 w-32">
-                      Jumlah
-                    </th>
-                    <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
-                      Subtotal
-                    </th>
-                    <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2 w-16">
-                      Hapus
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedProducts.map((product) => (
-                    <tr key={product._id} className="whitespace-nowrap">
-                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
-                        {product.name}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2 text-right">
-                        Rp {product.price.toLocaleString()}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            onClick={() => decreaseQuantity(product._id)}
-                            className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 text-sm font-bold"
-                            disabled={product.quantity <= 1}
-                          >
-                            -
-                          </button>
-                          <input
-                            type="number"
-                            inputMode="numeric"
-                            className="w-12 sm:w-16 border rounded p-0.5 text-center"
-                            min={1}
-                            max={product.stock}
-                            value={
-                              inputValues[product._id] ||
-                              product.quantity.toString()
-                            }
-                            onChange={(e) =>
-                              handleInputChange(product._id, e.target.value)
-                            }
-                            onBlur={() => handleQuantityBlur(product._id)}
-                          />
-                          <button
-                            onClick={() => increaseQuantity(product._id)}
-                            className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 text-sm font-bold"
-                            disabled={product.quantity >= product.stock}
-                          >
-                            +
-                          </button>
-                        </div>
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2 text-right">
-                        Rp {product.subtotal.toLocaleString()}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2 text-center">
-                        <button
-                          onClick={() => removeProduct(product._id)}
-                          className="text-red-500 hover:text-red-700"
-                          title="Hapus produk"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h2 className="font-bold text-center mb-4">Daftar Belanja</h2>
+
+            {/* Receipt Header */}
+            <div className="grid grid-cols-12 gap-2 mb-3 pb-2 border-b border-gray-300 font-semibold text-sm">
+              <div className="col-span-6">Produk</div>
+              <div className="col-span-2 text-center">Harga</div>
+              <div className="col-span-3 text-center">Jumlah</div>
+              <div className="col-span-1"></div>
+            </div>
+
+            {/* Product Items */}
+            <div className="space-y-4">
+              {selectedProducts.map((product) => (
+                <div
+                  key={product._id}
+                  className="grid grid-cols-12 gap-2 items-center"
+                >
+                  {/* Product Name */}
+                  <div className="col-span-6">
+                    <div className="font-medium">{product.name}</div>
+                    <div className="text-xs text-gray-500">
+                      Stok: {product.stock}
+                    </div>
+                  </div>
+
+                  {/* Price */}
+                  <div className="col-span-2 text-right">
+                    <div className="text-sm">
+                      Rp {product.price.toLocaleString()}
+                    </div>
+                  </div>
+
+                  {/* Quantity Controls */}
+                  <div className="col-span-3">
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => decreaseQuantity(product._id)}
+                        className="w-7 h-7 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 text-sm font-bold"
+                        disabled={product.quantity <= 1}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        className="w-12 border rounded p-1 text-center text-sm"
+                        min={1}
+                        max={product.stock}
+                        value={
+                          inputValues[product._id] ||
+                          product.quantity.toString()
+                        }
+                        onChange={(e) =>
+                          handleInputChange(product._id, e.target.value)
+                        }
+                        onBlur={() => handleQuantityBlur(product._id)}
+                      />
+                      <button
+                        onClick={() => increaseQuantity(product._id)}
+                        className="w-7 h-7 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 text-sm font-bold"
+                        disabled={product.quantity >= product.stock}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Delete Button */}
+                  <div className="col-span-1 flex justify-center">
+                    <button
+                      onClick={() => removeProduct(product._id)}
+                      className="text-red-500 hover:text-red-700"
+                      title="Hapus produk"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Subtotal */}
+                  <div className="col-span-12 mt-1 pt-1 border-t border-gray-100 flex justify-between">
+                    <div className="text-sm">Subtotal:</div>
+                    <div className="font-medium text-sm">
+                      Rp {product.subtotal.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Total Amount */}
+            <div className="mt-4 pt-3 border-t border-gray-300 flex justify-between items-center text-lg font-bold">
+              <span>TOTAL:</span>
+              <span className="text-blue-600">
+                Rp {totalAmount.toLocaleString()}
+              </span>
             </div>
           </div>
         )}
 
-        {/* Total Harga */}
-        <div className="flex justify-end items-center gap-4 text-lg font-semibold">
-          <span>Total:</span>
-          <span className="text-blue-600">
-            Rp {totalAmount.toLocaleString()}
-          </span>
-        </div>
-
-        {/* Tombol Simpan */}
-        <div className="mt-6 flex justify-end">
+        {/* Save Button */}
+        <div className="mt-6 flex justify-center">
           <button
             onClick={handleSubmit}
-            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition"
-            disabled={isLoading}
+            className="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition font-medium shadow-md w-full max-w-xs"
+            disabled={isLoading || selectedProducts.length === 0}
           >
             {isLoading ? "Menyimpan..." : "Simpan Transaksi"}
           </button>
