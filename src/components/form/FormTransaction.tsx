@@ -365,7 +365,7 @@ export default function TransactionForm({
 
                     {/* Price */}
                     <div className="ml-2">
-                      <div className="text-sm font-semibold">
+                      <div className="text-xs font-medium">
                         Rp {product.price.toLocaleString()}
                       </div>
                     </div>
@@ -429,7 +429,7 @@ export default function TransactionForm({
                     </button>
                     <div className="text-xs font-medium">
                       Subtotal:{" "}
-                      <span className="text-sm">
+                      <span className="text-sm font-semibold">
                         Rp {product.subtotal.toLocaleString()}
                       </span>
                     </div>
