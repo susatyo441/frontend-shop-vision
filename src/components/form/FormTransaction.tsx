@@ -301,10 +301,11 @@ export default function TransactionForm({
   return (
     <ComponentCard title="Transaksi Baru">
       <LoadingToast message="Menyimpan transaksi..." isLoading={isLoading} />
-      <div className="p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">
-        <div className="text-center mb-6">
-          <h1 className="text-xl font-bold">Input Transaksi</h1>
-          <div className="text-sm text-gray-500 mt-1">
+      <div className="p-4 bg-white rounded-lg shadow-md max-w-md mx-auto">
+        {/* Header */}
+        <div className="text-center mb-4">
+          <h1 className="text-lg font-bold">Input Transaksi</h1>
+          <div className="text-xs text-gray-500 mt-1">
             {new Date().toLocaleDateString("id-ID", {
               weekday: "long",
               day: "numeric",
@@ -323,8 +324,10 @@ export default function TransactionForm({
         )}
 
         {/* Search and Product Selection */}
-        <div className="mb-6">
-          <label className="block font-medium mb-2">Cari & Tambah Produk</label>
+        <div className="mb-4">
+          <label className="block font-medium mb-1 text-sm">
+            Cari & Tambah Produk
+          </label>
           <Select
             options={products}
             isMulti
@@ -333,51 +336,48 @@ export default function TransactionForm({
             onInputChange={(value) => setSearch(value)}
             onChange={(options) => handleProductSelect(options as Option[])}
             getOptionValue={(option) => option.value}
-            className="w-full"
+            className="w-full text-sm"
           />
         </div>
 
         {/* Receipt-style Product List */}
         {selectedProducts.length > 0 && (
-          <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <h2 className="font-bold text-center mb-4">Daftar Belanja</h2>
+          <div className="mb-5 bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <h2 className="font-bold text-center mb-3 text-sm">
+              Daftar Belanja
+            </h2>
 
-            {/* Receipt Header */}
-            <div className="grid grid-cols-12 gap-2 mb-3 pb-2 border-b border-gray-300 font-semibold text-sm">
-              <div className="col-span-6">Produk</div>
-              <div className="col-span-2 text-center">Harga</div>
-              <div className="col-span-3 text-center">Jumlah</div>
-              <div className="col-span-1"></div>
-            </div>
-
-            {/* Product Items */}
-            <div className="space-y-4">
+            {/* Product Items - Stacked vertically */}
+            <div className="space-y-3">
               {selectedProducts.map((product) => (
                 <div
                   key={product._id}
-                  className="grid grid-cols-12 gap-2 items-center"
+                  className="border-b border-gray-200 pb-3 last:border-0 last:pb-0"
                 >
-                  {/* Product Name */}
-                  <div className="col-span-6">
-                    <div className="font-medium">{product.name}</div>
-                    <div className="text-xs text-gray-500">
-                      Stok: {product.stock}
+                  {/* Top Row: Product Info */}
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{product.name}</div>
+                      <div className="text-xs text-gray-500">
+                        Stok: {product.stock}
+                      </div>
+                    </div>
+
+                    {/* Price */}
+                    <div className="ml-2">
+                      <div className="text-sm font-semibold">
+                        Rp {product.price.toLocaleString()}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Price */}
-                  <div className="col-span-2 text-right">
-                    <div className="text-sm">
-                      Rp {product.price.toLocaleString()}
-                    </div>
-                  </div>
-
-                  {/* Quantity Controls */}
-                  <div className="col-span-3">
-                    <div className="flex items-center justify-center gap-1">
+                  {/* Middle Row: Quantity Controls */}
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="text-xs text-gray-600">Jumlah:</div>
+                    <div className="flex items-center gap-1">
                       <button
                         onClick={() => decreaseQuantity(product._id)}
-                        className="w-7 h-7 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 text-sm font-bold"
+                        className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 text-xs"
                         disabled={product.quantity <= 1}
                       >
                         -
@@ -385,7 +385,7 @@ export default function TransactionForm({
                       <input
                         type="number"
                         inputMode="numeric"
-                        className="w-12 border rounded p-1 text-center text-sm"
+                        className="w-10 border rounded p-1 text-center text-xs"
                         min={1}
                         max={product.stock}
                         value={
@@ -399,7 +399,7 @@ export default function TransactionForm({
                       />
                       <button
                         onClick={() => increaseQuantity(product._id)}
-                        className="w-7 h-7 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 text-sm font-bold"
+                        className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 text-xs"
                         disabled={product.quantity >= product.stock}
                       >
                         +
@@ -407,16 +407,16 @@ export default function TransactionForm({
                     </div>
                   </div>
 
-                  {/* Delete Button */}
-                  <div className="col-span-1 flex justify-center">
+                  {/* Bottom Row: Subtotal and Delete */}
+                  <div className="flex justify-between items-center">
                     <button
                       onClick={() => removeProduct(product._id)}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-red-500 hover:text-red-700 text-sm"
                       title="Hapus produk"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
+                        className="h-4 w-4"
                         viewBox="0 0 20 20"
                         fill="currentColor"
                       >
@@ -427,13 +427,11 @@ export default function TransactionForm({
                         />
                       </svg>
                     </button>
-                  </div>
-
-                  {/* Subtotal */}
-                  <div className="col-span-12 mt-1 pt-1 border-t border-gray-100 flex justify-between">
-                    <div className="text-sm">Subtotal:</div>
-                    <div className="font-medium text-sm">
-                      Rp {product.subtotal.toLocaleString()}
+                    <div className="text-xs font-medium">
+                      Subtotal:{" "}
+                      <span className="text-sm">
+                        Rp {product.subtotal.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -441,9 +439,9 @@ export default function TransactionForm({
             </div>
 
             {/* Total Amount */}
-            <div className="mt-4 pt-3 border-t border-gray-300 flex justify-between items-center text-lg font-bold">
-              <span>TOTAL:</span>
-              <span className="text-blue-600">
+            <div className="mt-4 pt-3 border-t border-gray-300 flex justify-between items-center">
+              <span className="font-bold text-sm">TOTAL:</span>
+              <span className="text-blue-600 font-bold text-lg">
                 Rp {totalAmount.toLocaleString()}
               </span>
             </div>
@@ -451,10 +449,10 @@ export default function TransactionForm({
         )}
 
         {/* Save Button */}
-        <div className="mt-6 flex justify-center">
+        <div className="mt-4 flex justify-center">
           <button
             onClick={handleSubmit}
-            className="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition font-medium shadow-md w-full max-w-xs"
+            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition font-medium shadow-md w-full text-sm"
             disabled={isLoading || selectedProducts.length === 0}
           >
             {isLoading ? "Menyimpan..." : "Simpan Transaksi"}
