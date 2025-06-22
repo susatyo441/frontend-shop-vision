@@ -52,6 +52,7 @@ export default function TransactionForm({
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState<Option[]>([]);
+  const [selectedOptions, setSelectedOptions] = useState<Option[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
     defaultSelectedProducts
   );
@@ -83,6 +84,17 @@ export default function TransactionForm({
     }, {} as { [key: string]: string });
 
     setInputValues(newInputValues);
+
+    const initialOptions = defaultSelectedProducts.map((product) => ({
+      value: product._id,
+      label: product.name,
+      price: product.price,
+      stock: product.stock,
+      productID: product.productID,
+      variantName: product.variantName || null,
+    }));
+
+    setSelectedOptions(initialOptions);
   }, [defaultSelectedProducts]);
 
   useEffect(() => {
@@ -152,12 +164,64 @@ export default function TransactionForm({
 
     setSelectedProducts(selected);
     setInputValues(initialInputValues);
+    setSelectedOptions(selectedOptions);
   };
 
   const handleInputChange = (productId: string, value: string) => {
     setInputValues((prev) => ({
       ...prev,
       [productId]: value,
+    }));
+  };
+
+  const removeProduct = (productId: string) => {
+    setSelectedProducts((prev) => prev.filter((p) => p._id !== productId));
+    setSelectedOptions((prev) =>
+      prev.filter((option) => option.value !== productId)
+    );
+
+    setInputValues((prev) => {
+      const newValues = { ...prev };
+      delete newValues[productId];
+      return newValues;
+    });
+  };
+
+  // Function to increase quantity
+  const increaseQuantity = (productId: string) => {
+    const product = selectedProducts.find((p) => p._id === productId);
+    if (!product) return;
+
+    const newQuantity = Math.min(product.quantity + 1, product.stock);
+    updateProductQuantity(productId, newQuantity);
+  };
+
+  // Function to decrease quantity
+  const decreaseQuantity = (productId: string) => {
+    const product = selectedProducts.find((p) => p._id === productId);
+    if (!product) return;
+
+    const newQuantity = Math.max(product.quantity - 1, 1);
+    updateProductQuantity(productId, newQuantity);
+  };
+
+  // Function to update quantity
+  const updateProductQuantity = (productId: string, newQuantity: number) => {
+    setSelectedProducts((prev) =>
+      prev.map((p) =>
+        p._id === productId
+          ? {
+              ...p,
+              quantity: newQuantity,
+              subtotal: newQuantity * p.price,
+            }
+          : p
+      )
+    );
+
+    setInputValues((prev) => ({
+      ...prev,
+      [productId]: newQuantity.toString(),
     }));
   };
 
@@ -253,6 +317,7 @@ export default function TransactionForm({
           <Select
             options={products}
             isMulti
+            value={selectedOptions} // Gunakan state baru ini
             placeholder="Cari produk..."
             onInputChange={(value) => setSearch(value)}
             onChange={(options) => handleProductSelect(options as Option[])}
@@ -263,7 +328,7 @@ export default function TransactionForm({
         {/* Tabel Produk Terpilih */}
         {selectedProducts.length > 0 && (
           <div className="mb-4">
-            <h2 className="font-medium mb-2">Produk Terpilih</h2>
+            <h2 className="font-medium mb-3">Produk Terpilih</h2>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-gray-300 text-xs sm:text-sm min-w-[500px]">
                 <thead className="bg-gray-100">
@@ -272,13 +337,16 @@ export default function TransactionForm({
                       Nama Produk
                     </th>
                     <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
-                      Harga Satuan
+                      Harga
                     </th>
-                    <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
+                    <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2 w-32">
                       Jumlah
                     </th>
                     <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
                       Subtotal
+                    </th>
+                    <th className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2 w-16">
+                      Hapus
                     </th>
                   </tr>
                 </thead>
@@ -288,28 +356,64 @@ export default function TransactionForm({
                       <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
                         {product.name}
                       </td>
-                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
+                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2 text-right">
                         Rp {product.price.toLocaleString()}
                       </td>
                       <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
-                        <input
-                          type="number"
-                          inputMode="numeric"
-                          className="w-12 sm:w-16 border rounded p-0.5 text-center"
-                          min={1}
-                          max={product.stock}
-                          value={
-                            inputValues[product._id] ||
-                            product.quantity.toString()
-                          }
-                          onChange={(e) =>
-                            handleInputChange(product._id, e.target.value)
-                          }
-                          onBlur={() => handleQuantityBlur(product._id)}
-                        />
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => decreaseQuantity(product._id)}
+                            className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 text-sm font-bold"
+                            disabled={product.quantity <= 1}
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            className="w-12 sm:w-16 border rounded p-0.5 text-center"
+                            min={1}
+                            max={product.stock}
+                            value={
+                              inputValues[product._id] ||
+                              product.quantity.toString()
+                            }
+                            onChange={(e) =>
+                              handleInputChange(product._id, e.target.value)
+                            }
+                            onBlur={() => handleQuantityBlur(product._id)}
+                          />
+                          <button
+                            onClick={() => increaseQuantity(product._id)}
+                            className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 text-sm font-bold"
+                            disabled={product.quantity >= product.stock}
+                          >
+                            +
+                          </button>
+                        </div>
                       </td>
-                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2">
+                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2 text-right">
                         Rp {product.subtotal.toLocaleString()}
+                      </td>
+                      <td className="border border-gray-300 px-2 py-1 sm:px-3 sm:py-2 text-center">
+                        <button
+                          onClick={() => removeProduct(product._id)}
+                          className="text-red-500 hover:text-red-700"
+                          title="Hapus produk"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
                       </td>
                     </tr>
                   ))}
