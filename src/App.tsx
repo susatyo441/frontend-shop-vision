@@ -12,6 +12,10 @@ import FormProduct from "./pages/Forms/FormProduct";
 import FormProductUpdate from "./pages/Forms/FormProductUpdate";
 import TransactionFormPage from "./pages/Forms/FormTransactionPage";
 import VideoStreamPage from "./pages/Video/VideoStreamPage";
+import QuestionerForm from "./pages/Questioner/FormQuestioner";
+import QuestionerSummary from "./pages/Questioner/SummaryQuestioner";
+import CreditPage from "./pages/Questioner/CreditPage";
+import QuestionerDetail from "./pages/Questioner/QuestionerDetail";
 
 export default function App() {
   return (
@@ -26,9 +30,15 @@ export default function App() {
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
+            <Route path="/kuesioner" element={<QuestionerSummary />} />
+            <Route path="/kuesioner/form" element={<QuestionerForm />} />
+            <Route
+              path="/kuesioner/:questionerId"
+              element={<QuestionerDetail />}
+            />
+            <Route path="/credits" element={<CreditPage />} />
 
             {/* Transactions */}
-            <Route path="/transactions" element={<TransactionFormPage />} />
 
             <Route
               path="/transactions/create"

@@ -12,7 +12,7 @@ export default function VideoStreamPage() {
   return (
     <div>
       <PageMeta
-        title="React.js Form Elements Dashboard | TailAdmin - React.js Admin Dashboard Template"
+        title="Deteksi Produk | ShopVision"
         description="This is React.js Form Elements  Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
       <PageBreadcrumb pageTitle="Product Detection" />

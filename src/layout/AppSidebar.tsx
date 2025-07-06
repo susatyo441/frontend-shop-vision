@@ -6,6 +6,8 @@ import {
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
+  InfoIcon,
+  PaperPlaneIcon,
   TableIcon,
   UserCircleIcon,
 } from "../icons";
@@ -33,6 +35,25 @@ const navItems: NavItem[] = [
     name: "Produk",
     icon: <TableIcon />,
     path: "/produk",
+  },
+  {
+    name: "Kuesioner",
+    icon: <PaperPlaneIcon />,
+    subItems: [
+      {
+        name: "Ringkasan",
+        path: "/kuesioner",
+      },
+      {
+        name: "Form",
+        path: "/kuesioner/form",
+      },
+    ],
+  },
+  {
+    name: "Credits",
+    icon: <InfoIcon />,
+    path: "/credits",
   },
 ];
 
