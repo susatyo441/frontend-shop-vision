@@ -72,7 +72,7 @@ export default function ImageUploader({
           <div
             key={index}
             className="relative w-32 h-32 border-2 border-dashed rounded-lg overflow-hidden
-              border-gray-200 dark:border-gray-700 transition-all hover:border-blue-500"
+      border-gray-200 dark:border-gray-700 transition-all hover:border-blue-500"
           >
             <input
               type="file"
@@ -91,24 +91,16 @@ export default function ImageUploader({
                   className="w-full h-full object-cover cursor-pointer"
                   onClick={() => handleSetCover(index)}
                 />
-
-                {/* Badge Cover */}
                 {file.isCover && (
-                  <div
-                    className="absolute top-1 left-1 bg-blue-500 text-white px-2 py-1 
-                      rounded text-xs font-medium flex items-center gap-1"
-                  >
+                  <div className="absolute top-1 left-1 bg-blue-500 text-white px-2 py-1 rounded text-xs font-medium">
                     Cover
                   </div>
                 )}
-
-                {/* Tombol Hapus */}
                 <button
                   type="button"
                   onClick={() => handleRemoveFile(index)}
                   className="absolute top-1 right-1 bg-red-500 text-white rounded-full
-                      w-6 h-6 flex items-center justify-center opacity-100
-                      transition-opacity hover:bg-red-600"
+            w-6 h-6 flex items-center justify-center hover:bg-red-600"
                 >
                   <XMarkIcon className="w-4 h-4" />
                 </button>
@@ -117,10 +109,10 @@ export default function ImageUploader({
               <label
                 htmlFor={`file-upload-${index}`}
                 className="w-full h-full flex flex-col items-center justify-center cursor-pointer
-                  hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-gray-400"
+          hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-gray-400"
               >
                 <PhotoIcon className="w-8 h-8 mb-1" />
-                <span className="text-xs">Upload</span>
+                <span className="text-xs">Ambil Foto</span>
               </label>
             )}
           </div>
