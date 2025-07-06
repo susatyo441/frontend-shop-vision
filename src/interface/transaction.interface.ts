@@ -13,18 +13,22 @@ export interface ITransactionProductAttr {
   name: string;
   quantity: number;
   price: number;
-  category: {
-    _id: string;
-    name: string;
-  };
   totalPrice: number;
   coverPhoto: string;
+  category: {
+    _id?: string;
+    name?: string;
+    key?: number;
+  };
 }
 
 export interface ITransaction {
   _id: string;
   createdAt: string;
-  product: ITransactionProductAttr;
+  updatedAt: string;
+  totalPrice: number;
+  storeId: string;
+  products: ITransactionProductAttr[];
 }
 
 export interface ITransactionSummary {

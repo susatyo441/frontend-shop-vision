@@ -13,6 +13,7 @@ import { IToastMessage } from "../../interface/toast.interface";
 import Toast from "../toast/ErrorToast";
 import { IMAGE_URL } from "../../lib/envVariable";
 import { Link } from "react-router";
+import React from "react";
 
 export default function RecentOrders() {
   const [transactions, setTransactions] = useState<IPagination<ITransaction>>({
@@ -27,6 +28,25 @@ export default function RecentOrders() {
     type: undefined,
     message: "",
   });
+
+  function formatIndonesianDateTime(dateString: string) {
+    const date = new Date(dateString);
+
+    const formattedDate = date.toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    const formattedTime = date.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+
+    return `${formattedDate} ${formattedTime}`;
+  }
 
   const totalRecords = transactions.totalRecords;
   const totalPages = Math.ceil(totalRecords / limit);
@@ -141,36 +161,61 @@ export default function RecentOrders() {
 
           <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
             {transactions.data.map((transaction) => (
-              <TableRow key={`${transaction._id}${transaction.product.name}`}>
-                <TableCell className="w-[45%] sm:w-[40%] py-2 sm:py-3">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="h-10 w-10 sm:h-12 sm:w-12 overflow-hidden rounded-md flex-shrink-0">
-                      <img
-                        src={`${IMAGE_URL}${transaction.product.coverPhoto}`}
-                        alt={transaction.product.name}
-                        className="h-full w-full object-cover"
-                      />
+              <React.Fragment key={transaction._id}>
+                {/* Baris Pemisah / Header Transaksi */}
+                <TableRow className="bg-gray-100 dark:bg-gray-800/50">
+                  <td colSpan={4} className="py-3 px-4">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 text-center">
+                      <div className="break-words">
+                        <span>
+                          <strong>Tanggal:</strong>{" "}
+                          {formatIndonesianDateTime(transaction.createdAt)}
+                        </span>
+                      </div>
+                      <div className="break-words">
+                        <span>
+                          <strong>Total Harga:</strong> Rp{" "}
+                          {transaction.totalPrice.toLocaleString("id-ID")}
+                        </span>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-gray-800 dark:text-white/90">
-                        {transaction.product.name}
-                      </p>
-                      <span className="block text-gray-500 dark:text-gray-400 truncate">
-                        {transaction.product.category.name}
-                      </span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="w-[20%] py-2 sm:py-3 text-gray-500 dark:text-gray-400">
-                  {`Rp ${transaction.product.price.toLocaleString()}`}
-                </TableCell>
-                <TableCell className="w-[15%] py-2 sm:py-3 text-gray-500 dark:text-gray-400">
-                  {transaction.product.quantity}
-                </TableCell>
-                <TableCell className="w-[20%] py-2 sm:py-3 text-gray-500 dark:text-gray-400">
-                  {`Rp ${transaction.product.totalPrice.toLocaleString()}`}
-                </TableCell>
-              </TableRow>
+                  </td>
+                </TableRow>
+
+                {/* Daftar Produk dalam Transaksi */}
+                {transaction.products.map((product, idx) => (
+                  <TableRow key={`${transaction._id}-${product._id}-${idx}`}>
+                    <TableCell className="w-[45%] sm:w-[40%] py-2 sm:py-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="h-10 w-10 sm:h-12 sm:w-12 overflow-hidden rounded-md flex-shrink-0 border border-gray-200 dark:border-gray-700">
+                          <img
+                            src={`${IMAGE_URL}${product.coverPhoto}`}
+                            alt={product.name}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-gray-800 dark:text-white/90">
+                            {product.name}
+                          </p>
+                          <span className="block text-gray-500 dark:text-gray-400 truncate">
+                            {product.category.name}
+                          </span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[20%] py-2 sm:py-3 text-gray-500 dark:text-gray-400">
+                      Rp {product.price.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="w-[15%] py-2 sm:py-3 text-gray-500 dark:text-gray-400">
+                      {product.quantity}
+                    </TableCell>
+                    <TableCell className="w-[20%] py-2 sm:py-3 text-gray-500 dark:text-gray-400">
+                      Rp {product.totalPrice.toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>
