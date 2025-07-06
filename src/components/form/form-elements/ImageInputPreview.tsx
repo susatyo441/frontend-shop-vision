@@ -79,6 +79,7 @@ export default function ImageUploader({
               id={`file-upload-${index}`}
               className="hidden"
               accept="image/*"
+              capture="environment"
               onChange={handleFileUpload(index)}
             />
 
