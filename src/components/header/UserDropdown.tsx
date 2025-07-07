@@ -23,7 +23,14 @@ export default function UserDropdown() {
         className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
       >
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <img src={`${IMAGE_URL}${user?.profilePictureMedium}`} alt="User" />
+          <img
+            src={
+              user?.profilePictureMedium
+                ? `${IMAGE_URL}${user.profilePictureMedium}`
+                : "/images/user/profile_picture.jpg"
+            }
+            alt="User"
+          />
         </span>
 
         <span className="block mr-1 font-medium text-theme-sm">

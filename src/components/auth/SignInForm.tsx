@@ -7,6 +7,7 @@ import { IToastMessage } from "../../interface/toast.interface";
 import Toast from "../toast/ErrorToast";
 import { loginUser } from "../../service/user.login.service";
 import { getAuthToken } from "../../lib/localStorage";
+import { API_URL } from "../../lib/envVariable";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -52,6 +53,8 @@ export default function SignInForm() {
       setToastMessage({ message: "Gagal login", type: "error" });
     }
   };
+
+  const GOOGLE_LOGIN_URL = `${API_URL}/user/google/login`;
 
   return (
     <div className="flex flex-col flex-1">
@@ -139,23 +142,39 @@ export default function SignInForm() {
   hover:bg-blue-700 hover:shadow-lg active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800"
                     onClick={handleLogin}
                   >
-                    🔒 Login
+                    Masuk
                   </button>
                 </div>
               </div>
             </form>
 
-            {/* <div className="mt-5">
-              <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-                Don&apos;t have an account? {""}
-                <Link
-                  to="/signup"
-                  className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                >
-                  Sign Up
-                </Link>
-              </p>
-            </div> */}
+            {/* --- TAMBAHKAN KODE DI BAWAH INI --- */}
+
+            {/* Divider */}
+            <div className="relative flex items-center justify-center my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+              </div>
+              <div className="relative px-4 text-sm bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                OR
+              </div>
+            </div>
+
+            {/* Tombol Login Google */}
+            <div>
+              <a
+                href={GOOGLE_LOGIN_URL}
+                className="w-full flex items-center justify-center px-6 py-3 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold text-sm sm:text-base border border-gray-300 dark:border-gray-600 shadow-sm transition-all duration-300 ease-in-out 
+                                hover:bg-gray-50 dark:hover:bg-gray-600 active:scale-95 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700"
+              >
+                <img
+                  className="size-5 mr-3"
+                  src="https://www.svgrepo.com/show/475656/google-color.svg"
+                  alt="Google logo"
+                />
+                Masuk dengan Email Polines
+              </a>
+            </div>
           </div>
         </div>
       </div>

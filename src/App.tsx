@@ -16,6 +16,7 @@ import QuestionerForm from "./pages/Questioner/FormQuestioner";
 import QuestionerSummary from "./pages/Questioner/SummaryQuestioner";
 import CreditPage from "./pages/Questioner/CreditPage";
 import QuestionerDetail from "./pages/Questioner/QuestionerDetail";
+import GoogleAuthCallback from "./components/auth/GoogleAuthCallback";
 
 export default function App() {
   return (
@@ -68,6 +69,7 @@ export default function App() {
           {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/auth/callback" element={<GoogleAuthCallback />} />
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
