@@ -1,14 +1,16 @@
 import { ReactNode } from "react";
 
+// Definisikan tipe untuk props
 interface ButtonProps {
-  children: ReactNode; // Button text or content
-  size?: "sm" | "md"; // Button size
-  variant?: "primary" | "outline"; // Button variant
-  startIcon?: ReactNode; // Icon before the text
-  endIcon?: ReactNode; // Icon after the text
-  onClick?: () => void; // Click handler
-  disabled?: boolean; // Disabled state
-  className?: string; // Disabled state
+  children: ReactNode;
+  size?: "sm" | "md";
+  variant?: "primary" | "outline";
+  startIcon?: ReactNode;
+  endIcon?: ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  className?: string;
+  type?: "submit" | "button" | "reset"; // <-- TAMBAHKAN PROP INI
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -20,6 +22,7 @@ const Button: React.FC<ButtonProps> = ({
   onClick,
   className = "",
   disabled = false,
+  type = "submit", // <-- Tambahkan ke parameter dengan default 'button'
 }) => {
   // Size Classes
   const sizeClasses = {
@@ -37,10 +40,11 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-lg transition ${className} ${
+      type={type} // <-- GUNAKAN PROP TYPE DI SINI
+      className={`inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition ${className} ${
         sizeClasses[size]
       } ${variantClasses[variant]} ${
-        disabled ? "cursor-not-allowed opacity-50" : ""
+        disabled ? "cursor-not-allowed" : "" // Opacity sudah dihandle variant
       }`}
       onClick={onClick}
       disabled={disabled}

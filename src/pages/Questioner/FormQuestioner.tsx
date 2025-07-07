@@ -8,6 +8,7 @@ import { IToastMessage } from "../../interface/toast.interface";
 import LoadingToast from "../../components/loading/ToastLoading";
 import Toast from "../../components/toast/ErrorToast";
 import { questions } from "../../interface/questioner.interface";
+import ConfirmationModal from "../../components/common/Modal";
 
 const ratingLabels: [string, string][] = [
   ["Sangat Sulit", "Sangat Mudah"],
@@ -21,6 +22,7 @@ const ratingLabels: [string, string][] = [
 export default function QuestionerForm() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isOpenModal, setIsOpenModal] = useState(false);
   const [name, setName] = useState("");
   const [answers, setAnswers] = useState<number[]>(Array(6).fill(0));
   const [joinCredit, setJoinCredit] = useState(false);
@@ -64,7 +66,7 @@ export default function QuestionerForm() {
     }
     try {
       createQuestioner(formData);
-      navigate("/");
+      setIsOpenModal(true);
     } catch {
       setIsLoading(false);
       setToastMessage({
@@ -83,6 +85,13 @@ export default function QuestionerForm() {
       />
       <PageBreadcrumb pageTitle="Form Kuesioner" />
       <LoadingToast message="Menyimpan kuesioner..." isLoading={isLoading} />
+      <ConfirmationModal
+        isOpen={isOpenModal}
+        title="Terimakasih Banyak Sudah Mengisi Kuesioner"
+        message="Mudah-mudahan semua keinginan dan cita-cita anda tercapai serta diberi kesehatan baik raga dan jiwa, Aamiin"
+        onClose={() => navigate("/kuesioner")}
+        cancelButtonText="Siap!"
+      />
       {toastMessage.message != "" && (
         <>
           {console.log("Toast Message:", toastMessage)}

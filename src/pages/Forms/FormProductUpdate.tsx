@@ -12,7 +12,11 @@ import ImageUploader, {
 import { getCategory } from "../../service/category.service";
 import { IOptions } from "../../interface/common.interface";
 import Toast from "../../components/toast/ErrorToast";
-import { getProductDetail, updateProduct } from "../../service/product.service";
+import {
+  deleteProducts,
+  getProductDetail,
+  updateProduct,
+} from "../../service/product.service";
 import Button from "../../components/ui/button/Button";
 import { useNavigate, useParams } from "react-router-dom";
 import { IToastMessage } from "../../interface/toast.interface";
@@ -22,6 +26,7 @@ import {
   IProductVariant,
 } from "../../interface/product.inteface";
 import LoadingToast from "../../components/loading/ToastLoading";
+import ConfirmationModal from "../../components/common/Modal";
 
 export default function FormProductUpdate() {
   const navigate = useNavigate();
@@ -47,6 +52,7 @@ export default function FormProductUpdate() {
     type: undefined,
     message: "",
   });
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,6 +234,26 @@ export default function FormProductUpdate() {
     }
   };
 
+  // <-- FUNGSI BARU UNTUK MENGHANDLE DELETE -->
+  const handleDelete = async () => {
+    if (!productId) return; // Pastikan ada ID
+
+    setIsLoading(true);
+    try {
+      await deleteProducts([productId]);
+      setToastMessage({ message: "Produk berhasil dihapus.", type: "success" });
+      navigate("/produk"); // Langsung navigasi setelah berhasil
+    } catch {
+      setToastMessage({
+        message: "Terjadi kesalahan saat menghapus produk.",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
+      setIsDeleteModalOpen(false); // Tutup modal
+    }
+  };
+
   return (
     <div>
       <PageMeta
@@ -235,6 +261,15 @@ export default function FormProductUpdate() {
         description="This is React.js Form Elements  Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
       <PageBreadcrumb pageTitle="Form Product" />
+      {/* Tampilkan Modal Konfirmasi */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        title="Konfirmasi Hapus Produk"
+        message="Apakah Anda yakin ingin menghapus produk ini secara permanen? Tindakan ini tidak dapat dibatalkan."
+        confirmButtonText="Ya, Hapus Produk"
+      />
       <ComponentCard title="Isi Data Produk">
         {/* Tampilkan Loading Toast */}
         <LoadingToast message="Menyimpan produk..." isLoading={isLoading} />
@@ -395,8 +430,16 @@ export default function FormProductUpdate() {
               </div>
             )}
             <ImageUploader files={files} onFileChange={setFiles} />
-            <div className="mt-8 flex justify-end">
-              <Button variant="primary" disabled={isLoading}>
+            <div className="mt-8 flex justify-end space-x-4">
+              <Button
+                onClick={() => setIsDeleteModalOpen(true)}
+                type="button"
+                disabled={isLoading}
+                className="bg-red-600 hover:bg-red-700 text-white" // Contoh styling jika variant tidak ada
+              >
+                Hapus Produk
+              </Button>
+              <Button type="submit" variant="primary" disabled={isLoading}>
                 {isLoading ? "Menyimpan..." : "Simpan Produk"}
               </Button>
             </div>

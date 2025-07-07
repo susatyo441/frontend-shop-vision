@@ -262,67 +262,88 @@ export default function CaptureProduct({
     }, "image/jpeg");
   }, []);
 
-  const startCapture = () => {
-    // Mulai timeout untuk deteksi long press
-    longPressTimeout.current = window.setTimeout(() => {
-      setIsLongPress(true);
-      setIsCapturing(true);
-      setProgress(0);
-
-      const startTime = Date.now();
-      progressInterval.current = window.setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const percentage = Math.min((elapsed / 15000) * 100, 100);
-        setProgress(percentage);
-      }, 100);
-
-      captureTimeout.current = window.setTimeout(() => {
-        stopCapture();
-      }, 15000);
-    }, 300); // Threshold 300ms untuk long press
-  };
-
-  const stopCapture = () => {
-    // Bersihkan timeout long press
+  // Unified function to stop all capture-related activities
+  const stopAllCaptureActivities = useCallback(() => {
+    setIsCapturing(false);
+    setIsLongPress(false);
+    setProgress(0);
     if (longPressTimeout.current) {
       clearTimeout(longPressTimeout.current);
       longPressTimeout.current = null;
     }
-
-    if (isLongPress) {
-      // Long press: hentikan capture berulang
-      setIsLongPress(false);
-      setIsCapturing(false);
-      setProgress(0);
-      if (captureTimeout.current) clearTimeout(captureTimeout.current);
-      if (progressInterval.current) clearInterval(progressInterval.current);
-    } else {
-      // Short press: kirim satu frame
-      takeAndSendFrame();
+    if (captureTimeout.current) {
+      clearTimeout(captureTimeout.current);
+      captureTimeout.current = null;
+    }
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current);
+      progressInterval.current = null;
     }
     setIsCaptureFinished(true);
     stopCamera();
+  }, []);
+
+  const startCapture = () => {
+    if (isLongPress) {
+      stopAllCaptureActivities();
+      return;
+    }
+
+    if (longPressTimeout.current) clearTimeout(longPressTimeout.current);
+    if (progressInterval.current) clearInterval(progressInterval.current);
+
+    setIsCapturing(true);
+    setProgress(0);
+    const startTime = Date.now();
+
+    // Start progress bar immediately, it will run for a maximum of 15 seconds.
+    progressInterval.current = window.setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const percentage = Math.min((elapsed / 15000) * 100, 100);
+      setProgress(percentage);
+
+      // Automatically stop if the 15-second limit is reached.
+      if (elapsed >= 15000) {
+        stopAllCaptureActivities();
+      }
+    }, 100);
+
+    // Set a timeout to only enable the "long press" flag.
+    longPressTimeout.current = window.setTimeout(() => {
+      setIsLongPress(true);
+      if ("vibrate" in navigator) {
+        navigator.vibrate(200); // Bergetar selama 200ms
+      }
+    }, 1000);
   };
 
-  // Hapus interval long press saat komponen unmount
+  const stopCapture = () => {
+    // If we are in the locked long-press mode, releasing the button does nothing.
+    // Capture continues until the 15s timer expires or the user presses again.
+    if (isLongPress) {
+      return;
+    }
+    takeAndSendFrame();
+    // If it was a short press (<2s), stop everything on release.
+    stopAllCaptureActivities();
+  };
+
   useEffect(() => {
     return () => {
-      if (longPressTimeout.current) {
-        clearTimeout(longPressTimeout.current);
-      }
+      // Cleanup all timers and intervals on component unmount
+      if (longPressTimeout.current) clearTimeout(longPressTimeout.current);
+      if (captureTimeout.current) clearTimeout(captureTimeout.current);
+      if (progressInterval.current) clearInterval(progressInterval.current);
       stopCamera();
     };
   }, []);
 
   useEffect(() => {
-    console.log("isCapturing:", isCapturing);
+    console.log("isCapturing changed:", isCapturing);
     if (!isCapturing) return;
-
-    // interval ~30fps → 1000ms/30 ≈ 33ms
     const interval = setInterval(() => {
       takeAndSendFrame();
-    }, 100);
-
+    }, 100); // Sends frames at ~10 FPS
     return () => clearInterval(interval);
   }, [isCapturing, takeAndSendFrame]);
 
