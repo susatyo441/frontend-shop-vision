@@ -353,7 +353,7 @@ export default function CaptureProduct({
   return (
     <div className="p-4 max-w-md mx-auto bg-gray-50 min-h-screen">
       <h1 className="text-2xl font-bold mb-4 text-center text-gray-800">
-        Product Detection
+        Deteksi Produk
       </h1>
 
       {!isCaptureFinished && (
@@ -363,7 +363,7 @@ export default function CaptureProduct({
               htmlFor="camera"
               className="block mb-2 font-medium text-gray-700"
             >
-              Select Camera:
+              Pilih Kamera:
             </label>
             <select
               id="camera"

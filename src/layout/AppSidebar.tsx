@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router";
 // Assume these icons are imported from an icon library
 import {
   ChevronDownIcon,
+  DollarLineIcon,
   GridIcon,
   HorizontaLDots,
   InfoIcon,
@@ -27,14 +28,32 @@ const navItems: NavItem[] = [
     path: "/",
   },
   {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
+    icon: <DollarLineIcon />,
+    name: "Transaksi",
+    subItems: [
+      {
+        name: "List Transaksi",
+        path: "/transactions",
+      },
+      {
+        name: "+ Deteksi Produk",
+        path: "/capture",
+      },
+      {
+        name: "+ Manual Input",
+        path: "/transactions/create",
+      },
+    ],
   },
   {
     name: "Produk",
     icon: <TableIcon />,
     path: "/produk",
+  },
+  {
+    icon: <UserCircleIcon />,
+    name: "User Profile",
+    path: "/profile",
   },
   {
     name: "Kuesioner",
@@ -263,7 +282,7 @@ const AppSidebar: React.FC = () => {
               />
             </>
           ) : (
-            <img src="/favicon.png" alt="Logo" width={32} height={32} />
+            <img src="/images/favicon.png" alt="Logo" width={32} height={32} />
           )}
         </Link>
       </div>

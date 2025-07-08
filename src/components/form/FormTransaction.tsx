@@ -286,7 +286,7 @@ export default function TransactionForm({
         type: "success",
       });
       setSelectedProducts([]); // Reset form
-      navigate("/");
+      navigate("/transactions");
     } catch {
       setIsLoading(false);
       setToastMessage({

@@ -17,6 +17,7 @@ import QuestionerSummary from "./pages/Questioner/SummaryQuestioner";
 import CreditPage from "./pages/Questioner/CreditPage";
 import QuestionerDetail from "./pages/Questioner/QuestionerDetail";
 import GoogleAuthCallback from "./components/auth/GoogleAuthCallback";
+import TransactionPage from "./pages/Dashboard/Transactions";
 
 export default function App() {
   return (
@@ -45,6 +46,7 @@ export default function App() {
               path="/transactions/create"
               element={<TransactionFormPage />}
             />
+            <Route path="/transactions" element={<TransactionPage />} />
 
             {/* Video Stream */}
             <Route path="/capture" element={<VideoStreamPage />} />

@@ -15,7 +15,7 @@ export default function VideoStreamPage() {
         title="Deteksi Produk | ShopVision"
         description="This is React.js Form Elements  Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
-      <PageBreadcrumb pageTitle="Product Detection" />
+      <PageBreadcrumb pageTitle="Deteksi Produk" />
       <CaptureProduct key={resetKey} onResetRequest={handleResetCapture} />
     </div>
   );

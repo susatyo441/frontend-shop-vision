@@ -1,6 +1,5 @@
 import EcommerceMetrics from "../../components/ecommerce/EcommerceMetrics";
 import SalesChart from "../../components/ecommerce/SalesChart";
-import RecentOrders from "../../components/ecommerce/RecentOrders";
 import PageMeta from "../../components/common/PageMeta";
 import { useCallback, useEffect, useState } from "react";
 import { getTransactionSummary } from "../../service/transaction.service";
@@ -111,10 +110,6 @@ export default function Home() {
             data={summary.daily.sales}
             title="Penjualan Harian"
           />
-        </div>
-
-        <div className="col-span-12 xl:col-span-7">
-          <RecentOrders />
         </div>
       </div>
     </>
