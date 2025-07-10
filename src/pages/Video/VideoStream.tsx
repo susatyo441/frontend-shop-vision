@@ -323,7 +323,7 @@ export default function CaptureProduct({
     if (isLongPress) {
       return;
     }
-    takeAndSendFrame();
+
     // If it was a short press (<2s), stop everything on release.
     stopAllCaptureActivities();
   };
@@ -462,11 +462,11 @@ export default function CaptureProduct({
                 </div>
                 <div className="text-gray-700">
                   <span className="animate-pulse font-medium">
-                    Processing your capture
+                    Memproses gambar...
                   </span>
                   <br />
                   <span className="text-sm text-gray-500">
-                    Analyzing {nSend} frame{nSend !== 1 ? "s" : ""}...
+                    Menganalisa {nSend} frame{nSend !== 1 ? "s" : ""}...
                   </span>
                 </div>
               </div>
@@ -477,7 +477,7 @@ export default function CaptureProduct({
           {!isLoading && (
             <div>
               <div className="mt-4 text-center text-sm text-gray-500">
-                ⏱️ Average Processing FPS:{" "}
+                ⏱️ Rata-rata FPS:{" "}
                 <span className="font-semibold">{averageFPS}</span>
               </div>
               <div className="mt-6 flex justify-center">
@@ -497,7 +497,7 @@ export default function CaptureProduct({
                       clipRule="evenodd"
                     />
                   </svg>
-                  Capture Again
+                  Deteksi Lagi
                 </button>
               </div>
             </div>
