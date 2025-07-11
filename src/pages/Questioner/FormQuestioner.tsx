@@ -13,9 +13,13 @@ import ConfirmationModal from "../../components/common/Modal";
 const ratingLabels: [string, string][] = [
   ["Sangat Sulit", "Sangat Mudah"],
   ["Sangat Lambat", "Sangat Cepat"],
+  ["Sangat Tidak Akurat", "Sangat Akurat"],
   ["Sangat Tidak Percaya", "Sangat Percaya"],
   ["Sangat Tidak Jelas", "Sangat Jelas"],
+  ["Sangat Sulit", "Sangat Mudah"],
+  ["Sangat Tidak Jelas", "Sangat Jelas"],
   ["Sangat Tidak Membantu", "Sangat Membantu"],
+  ["Sangat Sering", "Tidak Pernah"],
   ["Sangat Tidak Membantu", "Sangat Membantu"],
 ];
 
