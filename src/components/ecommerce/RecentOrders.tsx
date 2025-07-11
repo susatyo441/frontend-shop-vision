@@ -32,20 +32,13 @@ export default function RecentOrders() {
   function formatIndonesianDateTime(dateString: string) {
     const date = new Date(dateString);
 
-    const formattedDate = date.toLocaleDateString("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-
     const formattedTime = date.toLocaleTimeString("id-ID", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
     });
 
-    return `${formattedDate} ${formattedTime}`;
+    return `${formattedTime}`;
   }
 
   const totalRecords = transactions.totalRecords;
@@ -168,7 +161,7 @@ export default function RecentOrders() {
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 text-center">
                       <div className="break-words">
                         <span>
-                          <strong>Tanggal:</strong>{" "}
+                          <strong>{transaction?.displayDate}</strong>{" "}
                           {formatIndonesianDateTime(transaction.createdAt)}
                         </span>
                       </div>

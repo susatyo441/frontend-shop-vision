@@ -29,6 +29,7 @@ export interface ITransaction {
   totalPrice: number;
   storeId: string;
   products: ITransactionProductAttr[];
+  displayDate?: string;
 }
 
 export interface ITransactionSummary {
