@@ -7,7 +7,7 @@ export const questions = [
   "Apakah informasi mudah ditemukan?",
   "Apakah sistem memberikan pesan, status, atau umpan balik (feedback) yang jelas dan membantu Anda memahami apa yang sedang terjadi?",
   "Seberapa besar sistem ini membantu pekerjaan Anda dibandingkan dengan metode sebelumnya?",
-  "Seberapa sering anda menemukan bug dalam sistem ini?",
+  "Seberapa stabil sistem ini saat Anda gunakan (bebas dari bug/error)?",
   "Menurut Anda, seberapa efektif fitur deteksi produk otomatis dalam mempercepat proses transaksi di kasir?",
 ];
 

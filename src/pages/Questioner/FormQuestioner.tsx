@@ -19,7 +19,7 @@ const ratingLabels: [string, string][] = [
   ["Sangat Sulit", "Sangat Mudah"],
   ["Sangat Tidak Jelas", "Sangat Jelas"],
   ["Sangat Tidak Membantu", "Sangat Membantu"],
-  ["Sangat Sering", "Tidak Pernah"],
+  ["Sangat tidak stabil, banyak bug", "Sangat stabil, tidak ada bug"],
   ["Sangat Tidak Membantu", "Sangat Membantu"],
 ];
 
