@@ -50,6 +50,10 @@ export default function QuestionerSummary() {
     data.question4,
     data.question5,
     data.question6,
+    data.question7,
+    data.question8,
+    data.question9,
+    data.question10,
   ];
 
   return (
