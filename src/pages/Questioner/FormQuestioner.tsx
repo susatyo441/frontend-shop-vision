@@ -28,7 +28,7 @@ export default function QuestionerForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [name, setName] = useState("");
-  const [answers, setAnswers] = useState<number[]>(Array(11).fill(0));
+  const [answers, setAnswers] = useState<number[]>(Array(9).fill(0));
   const [joinCredit, setJoinCredit] = useState(false);
   const [instagramUrl, setInstagramUrl] = useState("");
   const [toastMessage, setToastMessage] = useState<IToastMessage>({
