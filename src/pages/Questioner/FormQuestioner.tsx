@@ -28,7 +28,7 @@ export default function QuestionerForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [name, setName] = useState("");
-  const [answers, setAnswers] = useState<number[]>(Array(6).fill(0));
+  const [answers, setAnswers] = useState<number[]>(Array(11).fill(0));
   const [joinCredit, setJoinCredit] = useState(false);
   const [instagramUrl, setInstagramUrl] = useState("");
   const [toastMessage, setToastMessage] = useState<IToastMessage>({
@@ -65,6 +65,10 @@ export default function QuestionerForm() {
     formData.append("questioner4", payload.answers[3].toString());
     formData.append("questioner5", payload.answers[4].toString());
     formData.append("questioner6", payload.answers[5].toString());
+    formData.append("questioner7", payload.answers[6].toString());
+    formData.append("questioner8", payload.answers[7].toString());
+    formData.append("questioner9", payload.answers[8].toString());
+    formData.append("questioner10", payload.answers[9].toString());
     if (payload.joinCredit && payload.instagramUrl) {
       formData.append("instagram", payload.instagramUrl);
     }
