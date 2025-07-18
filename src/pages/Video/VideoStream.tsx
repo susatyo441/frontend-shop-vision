@@ -343,7 +343,7 @@ export default function CaptureProduct({
     if (!isCapturing) return;
     const interval = setInterval(() => {
       takeAndSendFrame();
-    }, 100); // Sends frames at ~10 FPS
+    }, 33); // Sends frames at ~10 FPS
     return () => clearInterval(interval);
   }, [isCapturing, takeAndSendFrame]);
 
