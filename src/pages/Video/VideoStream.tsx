@@ -33,6 +33,8 @@ export default function CaptureProduct({
   const productCacheRef = useRef<Record<string, IProduct>>({});
   const barcodeAudioRef = useRef<HTMLAudioElement | null>(null);
   const previousProductsRef = useRef<SelectedProduct[]>([]);
+  const maxTime = 30000;
+  const longPressTime = 1000;
 
   useEffect(() => {
     const requestCameraAccess = async () => {
@@ -299,11 +301,11 @@ export default function CaptureProduct({
     // Start progress bar immediately, it will run for a maximum of 15 seconds.
     progressInterval.current = window.setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const percentage = Math.min((elapsed / 15000) * 100, 100);
+      const percentage = Math.min((elapsed / maxTime) * 100, 100);
       setProgress(percentage);
 
-      // Automatically stop if the 15-second limit is reached.
-      if (elapsed >= 15000) {
+      // Automatically stop if the max-second limit is reached.
+      if (elapsed >= maxTime) {
         stopAllCaptureActivities();
       }
     }, 100);
@@ -314,7 +316,7 @@ export default function CaptureProduct({
       if ("vibrate" in navigator) {
         navigator.vibrate(200); // Bergetar selama 200ms
       }
-    }, 1000);
+    }, longPressTime);
   };
 
   const stopCapture = () => {
