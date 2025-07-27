@@ -18,7 +18,7 @@ export default function CaptureProduct({
   const wsRef = useRef<WebSocket | null>(null);
   const longPressTimeout = useRef<number | null>(null);
   const [isLongPress, setIsLongPress] = useState(false);
-  const [products, setProducts] = useState<SelectedProduct[]>([]);
+  const [allProducts, setAllProducts] = useState<SelectedProduct[]>([]); // Semua produk dari berbagai sesi
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
   const [isCapturing, setIsCapturing] = useState(false);
@@ -32,7 +32,8 @@ export default function CaptureProduct({
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const productCacheRef = useRef<Record<string, IProduct>>({});
   const barcodeAudioRef = useRef<HTMLAudioElement | null>(null);
-  const previousProductsRef = useRef<SelectedProduct[]>([]);
+  const previousProductsRef = useRef<SelectedProduct[]>([]); // Untuk deteksi perubahan dalam satu sesi
+  const sessionProductsRef = useRef<SelectedProduct[]>([]); // Produk yang terdeteksi dalam satu sesi
   const maxTime = 30000;
   const longPressTime = 1000;
 
@@ -113,7 +114,14 @@ export default function CaptureProduct({
     barcodeAudioRef.current = new Audio("/sounds/store-scanner-beep-90395.mp3"); // Pastikan file ini tersedia di public folder
   }, []);
 
-  useEffect(() => {
+  // Fungsi untuk membuat koneksi WebSocket
+  const setupWebSocket = useCallback(() => {
+    // Tutup koneksi sebelumnya jika ada
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+
     const ws = new WebSocket(`wss://${ML_URL}/ws`);
     wsRef.current = ws;
 
@@ -123,7 +131,7 @@ export default function CaptureProduct({
       const response = JSON.parse(event.data);
       if (response?.status !== 200 || !response.data) return;
       setAverageFPS(response.averageFPS);
-      const newProducts: SelectedProduct[] = [];
+      const newSessionProducts: SelectedProduct[] = [];
 
       for (const { id, quantity } of response.data) {
         if (!productCacheRef.current[id]) {
@@ -140,7 +148,7 @@ export default function CaptureProduct({
 
         if (product.variants && product.variants.length > 0) {
           const variant = product.variants[0];
-          newProducts.push({
+          newSessionProducts.push({
             _id: `${product._id}|${variant.name}`,
             productID: product._id,
             name: `${product.name} - ${variant.name}`,
@@ -151,7 +159,7 @@ export default function CaptureProduct({
             subtotal: variant.price * quantity,
           });
         } else {
-          newProducts.push({
+          newSessionProducts.push({
             _id: product._id,
             productID: product._id,
             name: product.name,
@@ -168,7 +176,7 @@ export default function CaptureProduct({
       const previous = previousProductsRef.current;
       let hasNewProduct = false;
 
-      for (const newP of newProducts) {
+      for (const newP of newSessionProducts) {
         const old = previous.find((p) => p._id === newP._id);
         if (!old || old.quantity !== newP.quantity) {
           hasNewProduct = true;
@@ -183,8 +191,8 @@ export default function CaptureProduct({
         });
       }
 
-      previousProductsRef.current = newProducts;
-      setProducts(newProducts);
+      previousProductsRef.current = newSessionProducts;
+      sessionProductsRef.current = newSessionProducts;
 
       setNSend((prev) => {
         const next = prev - 1;
@@ -193,8 +201,23 @@ export default function CaptureProduct({
       });
     };
 
-    return () => wsRef.current?.close();
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
   }, []);
+
+  // Setup WebSocket saat pertama kali
+  useEffect(() => {
+    setupWebSocket();
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [setupWebSocket]);
 
   const startCamera = useCallback(async () => {
     try {
@@ -279,6 +302,38 @@ export default function CaptureProduct({
     setIsCapturing(false);
     setIsLongPress(false);
     setProgress(0);
+    console.log(sessionProductsRef);
+
+    // Tambahkan produk sesi ini ke daftar semua produk
+    if (sessionProductsRef.current.length > 0) {
+      setAllProducts((prev) => {
+        // Buat salinan baru dari produk sebelumnya
+        const updatedProducts = [...prev];
+
+        sessionProductsRef.current.forEach((newProduct) => {
+          // Cari produk yang sama berdasarkan _id
+          const existingProductIndex = updatedProducts.findIndex(
+            (p) => p._id === newProduct._id
+          );
+
+          if (existingProductIndex !== -1) {
+            // Jika produk sudah ada, tambahkan kuantitasnya
+            const existing = updatedProducts[existingProductIndex];
+            updatedProducts[existingProductIndex] = {
+              ...existing,
+              quantity: existing.quantity + newProduct.quantity,
+              subtotal: existing.subtotal + newProduct.subtotal,
+            };
+          } else {
+            // Jika produk belum ada, tambahkan sebagai produk baru
+            updatedProducts.push(newProduct);
+          }
+        });
+
+        return updatedProducts;
+      });
+    }
+
     if (longPressTimeout.current) {
       clearTimeout(longPressTimeout.current);
       longPressTimeout.current = null;
@@ -346,6 +401,9 @@ export default function CaptureProduct({
       if (captureTimeout.current) clearTimeout(captureTimeout.current);
       if (progressInterval.current) clearInterval(progressInterval.current);
       stopCamera();
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
     };
   }, []);
 
@@ -357,6 +415,27 @@ export default function CaptureProduct({
     }, 100); // Sends frames at ~10 FPS
     return () => clearInterval(interval);
   }, [isCapturing, takeAndSendFrame]);
+
+  // Handler untuk tombol "Tambah Produk Lain"
+  const handleAddMoreProducts = useCallback(() => {
+    // Reset state untuk sesi baru
+    sessionProductsRef.current = [];
+    previousProductsRef.current = [];
+    setIsCaptureFinished(false);
+
+    // Restart WebSocket connection
+    setupWebSocket();
+  }, [setupWebSocket]);
+
+  // Handler untuk tombol "Deteksi Ulang"
+  const handleResetDetection = useCallback(() => {
+    onResetRequest();
+    setAllProducts([]);
+    sessionProductsRef.current = [];
+    previousProductsRef.current = [];
+    setIsCaptureFinished(false);
+    setupWebSocket();
+  }, [onResetRequest, setupWebSocket]);
 
   const radius = 28; // Adjusted radius to fit design
   const circumference = 2 * Math.PI * radius;
@@ -484,7 +563,7 @@ export default function CaptureProduct({
             </div>
           )}
 
-          <TransactionForm defaultSelectedProducts={products} />
+          <TransactionForm defaultSelectedProducts={allProducts} />
           {!isLoading && (
             <div className="mt-8 space-y-4">
               <div className="text-center text-sm text-gray-500">
@@ -495,10 +574,8 @@ export default function CaptureProduct({
               <div className="mt-4">
                 <div className="flex flex-col items-center gap-2">
                   <div className="w-4/5">
-                    {" "}
-                    {/* Kontainer 80% */}
                     <button
-                      onClick={() => setIsCaptureFinished(false)}
+                      onClick={handleAddMoreProducts}
                       className="w-full px-4 py-2 bg-emerald-500 text-white rounded-lg shadow hover:bg-emerald-600 transition-colors flex items-center justify-center text-sm font-medium"
                     >
                       <svg
@@ -518,14 +595,8 @@ export default function CaptureProduct({
                   </div>
 
                   <div className="w-4/5">
-                    {" "}
-                    {/* Kontainer 80% */}
                     <button
-                      onClick={() => {
-                        onResetRequest();
-                        setIsCaptureFinished(false);
-                        setProducts([]);
-                      }}
+                      onClick={handleResetDetection}
                       className="w-full px-4 py-2 bg-amber-500 text-white rounded-lg shadow hover:bg-amber-600 transition-colors flex items-center justify-center text-sm font-medium"
                     >
                       <svg
