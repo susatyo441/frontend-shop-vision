@@ -196,10 +196,9 @@ export default function CaptureProduct({
     return () => wsRef.current?.close();
   }, []);
 
-  useEffect(() => {
-    if (!selectedDeviceId) return;
-    const initCamera = async () => {
-      try {
+  const startCamera = useCallback(async () => {
+    try {
+      if (selectedDeviceId) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { deviceId: { exact: selectedDeviceId } },
         });
@@ -210,12 +209,23 @@ export default function CaptureProduct({
           videoRef.current.srcObject = stream;
           videoRef.current.play();
         }
-      } catch {
-        alert("Gagal mengakses kamera. Izinkan akses kamera di browser.");
+      }
+    } catch (err) {
+      console.error("Gagal mengakses kamera:", err);
+      alert("Gagal mengakses kamera. Izinkan akses kamera di browser.");
+    }
+  }, [selectedDeviceId]);
+
+  useEffect(() => {
+    if (!isCaptureFinished) {
+      startCamera();
+    }
+    return () => {
+      if (isCaptureFinished) {
+        stopCamera();
       }
     };
-    initCamera();
-  }, [selectedDeviceId]);
+  }, [isCaptureFinished, startCamera]);
 
   const stopCamera = () => {
     const stream = cameraStreamRef.current;
@@ -282,7 +292,6 @@ export default function CaptureProduct({
       progressInterval.current = null;
     }
     setIsCaptureFinished(true);
-    stopCamera();
   }, []);
 
   const startCapture = () => {
@@ -477,30 +486,64 @@ export default function CaptureProduct({
 
           <TransactionForm defaultSelectedProducts={products} />
           {!isLoading && (
-            <div>
-              <div className="mt-4 text-center text-sm text-gray-500">
+            <div className="mt-8 space-y-4">
+              <div className="text-center text-sm text-gray-500">
                 ⏱️ Rata-rata FPS:{" "}
                 <span className="font-semibold">{averageFPS}</span>
               </div>
-              <div className="mt-6 flex justify-center">
-                <button
-                  onClick={onResetRequest} // Panggil callback dari parent
-                  className="px-5 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full shadow-md hover:from-red-600 hover:to-red-700 transition-all flex items-center font-medium"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Deteksi Lagi
-                </button>
+
+              <div className="mt-4">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-4/5">
+                    {" "}
+                    {/* Kontainer 80% */}
+                    <button
+                      onClick={() => setIsCaptureFinished(false)}
+                      className="w-full px-4 py-2 bg-emerald-500 text-white rounded-lg shadow hover:bg-emerald-600 transition-colors flex items-center justify-center text-sm font-medium"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-1.5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Tambah Produk Lain
+                    </button>
+                  </div>
+
+                  <div className="w-4/5">
+                    {" "}
+                    {/* Kontainer 80% */}
+                    <button
+                      onClick={() => {
+                        onResetRequest();
+                        setIsCaptureFinished(false);
+                        setProducts([]);
+                      }}
+                      className="w-full px-4 py-2 bg-amber-500 text-white rounded-lg shadow hover:bg-amber-600 transition-colors flex items-center justify-center text-sm font-medium"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-1.5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Deteksi Ulang
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
