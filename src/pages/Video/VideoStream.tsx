@@ -132,6 +132,7 @@ export default function CaptureProduct({
       if (response?.status !== 200 || !response.data) return;
       setAverageFPS(response.averageFPS);
       const newSessionProducts: SelectedProduct[] = [];
+      console.log("Received products:", response.data);
 
       for (const { id, quantity } of response.data) {
         if (!productCacheRef.current[id]) {
@@ -197,7 +198,7 @@ export default function CaptureProduct({
       setNSend((prev) => {
         const next = prev - 1;
         if (next === 0) setIsLoading(false);
-        return next;
+        return Math.max(0, next);
       });
     };
 
@@ -302,37 +303,37 @@ export default function CaptureProduct({
     setIsCapturing(false);
     setIsLongPress(false);
     setProgress(0);
-    console.log(sessionProductsRef);
+    // console.log(sessionProductsRef);
 
-    // Tambahkan produk sesi ini ke daftar semua produk
-    if (sessionProductsRef.current.length > 0) {
-      setAllProducts((prev) => {
-        // Buat salinan baru dari produk sebelumnya
-        const updatedProducts = [...prev];
+    // // Tambahkan produk sesi ini ke daftar semua produk
+    // if (sessionProductsRef.current.length >= 0) {
+    //   setAllProducts((prev) => {
+    //     // Buat salinan baru dari produk sebelumnya
+    //     const updatedProducts = [...prev];
 
-        sessionProductsRef.current.forEach((newProduct) => {
-          // Cari produk yang sama berdasarkan _id
-          const existingProductIndex = updatedProducts.findIndex(
-            (p) => p._id === newProduct._id
-          );
+    //     sessionProductsRef.current.forEach((newProduct) => {
+    //       // Cari produk yang sama berdasarkan _id
+    //       const existingProductIndex = updatedProducts.findIndex(
+    //         (p) => p._id === newProduct._id
+    //       );
 
-          if (existingProductIndex !== -1) {
-            // Jika produk sudah ada, tambahkan kuantitasnya
-            const existing = updatedProducts[existingProductIndex];
-            updatedProducts[existingProductIndex] = {
-              ...existing,
-              quantity: existing.quantity + newProduct.quantity,
-              subtotal: existing.subtotal + newProduct.subtotal,
-            };
-          } else {
-            // Jika produk belum ada, tambahkan sebagai produk baru
-            updatedProducts.push(newProduct);
-          }
-        });
+    //       if (existingProductIndex !== -1) {
+    //         // Jika produk sudah ada, tambahkan kuantitasnya
+    //         const existing = updatedProducts[existingProductIndex];
+    //         updatedProducts[existingProductIndex] = {
+    //           ...existing,
+    //           quantity: existing.quantity + newProduct.quantity,
+    //           subtotal: existing.subtotal + newProduct.subtotal,
+    //         };
+    //       } else {
+    //         // Jika produk belum ada, tambahkan sebagai produk baru
+    //         updatedProducts.push(newProduct);
+    //       }
+    //     });
 
-        return updatedProducts;
-      });
-    }
+    //     return updatedProducts;
+    //   });
+    // }
 
     if (longPressTimeout.current) {
       clearTimeout(longPressTimeout.current);
@@ -348,6 +349,46 @@ export default function CaptureProduct({
     }
     setIsCaptureFinished(true);
   }, []);
+
+  useEffect(() => {
+    // Kondisi ini hanya akan terpenuhi setelah:
+    // 1. Perekaman dihentikan (isCaptureFinished = true).
+    // 2. Frame terakhir telah menerima balasan dari WebSocket (isLoading = false).
+    if (!isLoading) {
+      console.log(
+        "Processing final results now. Safe to read sessionProductsRef."
+      );
+
+      if (sessionProductsRef.current.length > 0) {
+        setAllProducts((prev) => {
+          // Buat salinan baru dari produk sebelumnya
+          const updatedProducts = [...prev];
+
+          sessionProductsRef.current.forEach((newProduct) => {
+            // Cari produk yang sama berdasarkan _id
+            const existingProductIndex = updatedProducts.findIndex(
+              (p) => p._id === newProduct._id
+            );
+
+            if (existingProductIndex !== -1) {
+              // Jika produk sudah ada, tambahkan kuantitasnya
+              const existing = updatedProducts[existingProductIndex];
+              updatedProducts[existingProductIndex] = {
+                ...existing,
+                quantity: existing.quantity + newProduct.quantity,
+                subtotal: existing.subtotal + newProduct.subtotal,
+              };
+            } else {
+              // Jika produk belum ada, tambahkan sebagai produk baru
+              updatedProducts.push(newProduct);
+            }
+          });
+
+          return updatedProducts;
+        });
+      }
+    }
+  }, [isLoading]);
 
   const startCapture = () => {
     if (isLongPress) {
