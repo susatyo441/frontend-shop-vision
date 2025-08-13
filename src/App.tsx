@@ -18,6 +18,7 @@ import CreditPage from "./pages/Questioner/CreditPage";
 import QuestionerDetail from "./pages/Questioner/QuestionerDetail";
 import GoogleAuthCallback from "./components/auth/GoogleAuthCallback";
 import TransactionPage from "./pages/Dashboard/Transactions";
+import UpdateStockProductDetection from "./pages/Video/UpdateStockProductPage";
 
 export default function App() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
 
             {/* Video Stream */}
             <Route path="/capture" element={<VideoStreamPage />} />
+            <Route path="/capture/update-stock" element={<UpdateStockProductDetection />} />
 
             {/* Products */}
             <Route path="/produk" element={<ProductTables />} />

@@ -122,7 +122,6 @@ export default function ProductTable() {
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         {toastMessage.message != "" && (
           <>
-            {console.log("Toast Message:", toastMessage)}
             <Toast
               message={toastMessage.message}
               type={toastMessage.type} // Pastikan type diberikan
@@ -130,8 +129,8 @@ export default function ProductTable() {
             />
           </>
         )}
-        {/* Search dan Tambah Produk */}
-        <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-2 p-4 sm:gap-4">
+       {/* Search dan Tombol Aksi */}
+        <div className="flex flex-col-reverse items-center justify-between gap-4 p-4 sm:flex-row">
           {/* Search di bawah saat mobile */}
           <div className="relative w-full sm:w-64">
             <input
@@ -157,13 +156,49 @@ export default function ProductTable() {
             </svg>
           </div>
 
-          {/* Tombol di atas saat mobile */}
-          <Link
-            to="/produk/form"
-            className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600"
-          >
-            + Tambah Produk
-          </Link>
+          {/* Grup Tombol - di atas saat mobile, berdampingan di desktop */}
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:gap-3">
+            <Link
+              to="/capture/update-stock"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 sm:w-auto"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Stok Produk
+            </Link>
+           <Link
+              to="/produk/form"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 sm:w-auto"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Tambah Produk
+            </Link>
+          </div>
         </div>
 
         <div className="max-w-full overflow-x-auto">

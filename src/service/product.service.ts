@@ -82,6 +82,26 @@ export const updateProduct = async (id: string, form: FormData) => {
   }
 };
 
+export const updateProductStocks = async (body: {
+  products: { productId: string; stock: number; variant?: string }[];
+}) => {
+  try {
+    await axios.patch(`${API_URL}/product/stock`, body, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      localStorage.removeItem("token"); // Hapus token
+      window.location.href = "/signin"; // Redirect ke Signin
+    }
+    console.error("Gagal edit produk:", error);
+    throw error; // Tetap lempar error agar caller tahu
+  }
+};
+
 export const deleteProducts = async (ids: string[]) => {
   try {
     await axios.delete(`${API_URL}/product`, {

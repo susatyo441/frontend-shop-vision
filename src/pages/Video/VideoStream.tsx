@@ -5,13 +5,15 @@ import TransactionForm, {
 import { IProduct } from "../../interface/product.inteface";
 import { ML_URL } from "../../lib/envVariable";
 import { getProductDetail } from "../../service/product.service";
+import StockAdditionForm from "../Forms/FormUpdateStockProduct";
 
 interface CaptureProductProps {
   onResetRequest: () => void;
+  mode: "transaction" | "updateQuantity"; 
 }
 
 export default function CaptureProduct({
-  onResetRequest,
+  onResetRequest, mode
 }: CaptureProductProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -186,7 +188,7 @@ export default function CaptureProduct({
       }
 
       if (hasNewProduct && barcodeAudioRef.current) {
-        console.log("Playing barcode beep sound");
+    
         barcodeAudioRef.current.play().catch((e) => {
           console.warn("Gagal memutar suara:", e);
         });
@@ -303,37 +305,7 @@ export default function CaptureProduct({
     setIsCapturing(false);
     setIsLongPress(false);
     setProgress(0);
-    // console.log(sessionProductsRef);
-
-    // // Tambahkan produk sesi ini ke daftar semua produk
-    // if (sessionProductsRef.current.length >= 0) {
-    //   setAllProducts((prev) => {
-    //     // Buat salinan baru dari produk sebelumnya
-    //     const updatedProducts = [...prev];
-
-    //     sessionProductsRef.current.forEach((newProduct) => {
-    //       // Cari produk yang sama berdasarkan _id
-    //       const existingProductIndex = updatedProducts.findIndex(
-    //         (p) => p._id === newProduct._id
-    //       );
-
-    //       if (existingProductIndex !== -1) {
-    //         // Jika produk sudah ada, tambahkan kuantitasnya
-    //         const existing = updatedProducts[existingProductIndex];
-    //         updatedProducts[existingProductIndex] = {
-    //           ...existing,
-    //           quantity: existing.quantity + newProduct.quantity,
-    //           subtotal: existing.subtotal + newProduct.subtotal,
-    //         };
-    //       } else {
-    //         // Jika produk belum ada, tambahkan sebagai produk baru
-    //         updatedProducts.push(newProduct);
-    //       }
-    //     });
-
-    //     return updatedProducts;
-    //   });
-    // }
+  
 
     if (longPressTimeout.current) {
       clearTimeout(longPressTimeout.current);
@@ -484,7 +456,7 @@ export default function CaptureProduct({
   return (
     <div className="p-4 max-w-md mx-auto bg-gray-50 min-h-screen">
       <h1 className="text-2xl font-bold mb-4 text-center text-gray-800">
-        Deteksi Produk
+        {mode === "transaction" ?"Deteksi Produk" : "Tambah Stok Produk"}
       </h1>
 
       {!isCaptureFinished && (
@@ -604,7 +576,9 @@ export default function CaptureProduct({
             </div>
           )}
 
+          {mode === "transaction" ? (
           <TransactionForm defaultSelectedProducts={allProducts} />
+          ) :( <StockAdditionForm defaultSelectedProducts={allProducts} />)}
           {!isLoading && (
             <div className="mt-8 space-y-4">
               <div className="text-center text-sm text-gray-500">
