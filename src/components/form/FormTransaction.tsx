@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
-import Select from "react-select"; // Kita pakai react-select agar multi-select lebih fleksibel
-import { getProducts } from "../../service/product.service";
-import { IToastMessage } from "../../interface/toast.interface";
-import Toast from "../../components/toast/ErrorToast";
-import { createTransaction } from "../../service/transaction.service";
-import { ICreateTransaction } from "../../interface/transaction.interface";
-import ComponentCard from "../../components/common/ComponentCard";
-import { useNavigate } from "react-router";
-import LoadingToast from "../../components/loading/ToastLoading";
+import React, { useState, useEffect } from 'react';
+import Select from 'react-select'; // Kita pakai react-select agar multi-select lebih fleksibel
+import { getProducts } from '../../service/product.service';
+import { IToastMessage } from '../../interface/toast.interface';
+import Toast from '../../components/toast/ErrorToast';
+import { createTransaction } from '../../service/transaction.service';
+import { ICreateTransaction } from '../../interface/transaction.interface';
+import ComponentCard from '../../components/common/ComponentCard';
+import { useNavigate } from 'react-router';
+import LoadingToast from '../../components/loading/ToastLoading';
+import { formatCurrencyRp } from '../../util/formatCurrency';
 
 interface Product {
   _id: string;
@@ -54,7 +55,7 @@ export default function TransactionForm({
   const [products, setProducts] = useState<Option[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<Option[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
-    defaultSelectedProducts
+    defaultSelectedProducts,
   );
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>(
     () => {
@@ -64,14 +65,14 @@ export default function TransactionForm({
         initialValues[product._id] = product.quantity.toString();
       });
       return initialValues;
-    }
+    },
   );
 
   const [toastMessage, setToastMessage] = useState<IToastMessage>({
     type: undefined,
-    message: "",
+    message: '',
   });
-  const [search, setSearch] = useState<string>("");
+  const [search, setSearch] = useState<string>('');
 
   useEffect(() => {
     // Update selectedProducts ketika defaultSelectedProducts berubah
@@ -107,7 +108,7 @@ export default function TransactionForm({
 
   const fetchProducts = async (searchValue: string) => {
     try {
-      const { data } = await getProducts(1, 10000, searchValue, "name", true);
+      const { data } = await getProducts(1, 10000, searchValue, 'name', true);
       setProducts(
         data.data.flatMap((product: Product) => {
           if (product.variants && product.variants.length > 0) {
@@ -129,12 +130,12 @@ export default function TransactionForm({
               variantName: null,
             };
           }
-        })
+        }),
       );
     } catch {
       setToastMessage({
-        message: "Gagal mengambil data produk.",
-        type: "error",
+        message: 'Gagal mengambil data produk.',
+        type: 'error',
       });
     }
   };
@@ -142,7 +143,7 @@ export default function TransactionForm({
   const handleProductSelect = (selectedOptions: Option[]) => {
     const selected = selectedOptions.map((option) => {
       const existingProduct = selectedProducts.find(
-        (p) => p._id === option.value
+        (p) => p._id === option.value,
       );
       const quantity = existingProduct?.quantity || 1;
 
@@ -159,7 +160,7 @@ export default function TransactionForm({
     });
 
     const initialInputValues = Object.fromEntries(
-      selected.map((p) => [p._id, p.quantity.toString()])
+      selected.map((p) => [p._id, p.quantity.toString()]),
     );
 
     setSelectedProducts(selected);
@@ -177,7 +178,7 @@ export default function TransactionForm({
   const removeProduct = (productId: string) => {
     setSelectedProducts((prev) => prev.filter((p) => p._id !== productId));
     setSelectedOptions((prev) =>
-      prev.filter((option) => option.value !== productId)
+      prev.filter((option) => option.value !== productId),
     );
 
     setInputValues((prev) => {
@@ -215,8 +216,8 @@ export default function TransactionForm({
               quantity: newQuantity,
               subtotal: newQuantity * p.price,
             }
-          : p
-      )
+          : p,
+      ),
     );
 
     setInputValues((prev) => ({
@@ -226,7 +227,7 @@ export default function TransactionForm({
   };
 
   const handleQuantityBlur = (productId: string) => {
-    const rawValue = inputValues[productId] ?? "1";
+    const rawValue = inputValues[productId] ?? '1';
     let quantity = parseInt(rawValue, 10) || 1;
 
     const product = selectedProducts.find((p) => p._id === productId);
@@ -243,8 +244,8 @@ export default function TransactionForm({
               quantity,
               subtotal: quantity * p.price,
             }
-          : p
-      )
+          : p,
+      ),
     );
 
     setInputValues((prev) => ({
@@ -255,7 +256,7 @@ export default function TransactionForm({
 
   const totalAmount = selectedProducts.reduce(
     (sum, product) => sum + product.subtotal,
-    0
+    0,
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -265,8 +266,8 @@ export default function TransactionForm({
     if (selectedProducts.length === 0) {
       setIsLoading(false);
       setToastMessage({
-        message: "Pilih setidaknya satu produk!",
-        type: "error",
+        message: 'Pilih setidaknya satu produk!',
+        type: 'error',
       });
       return;
     }
@@ -282,16 +283,16 @@ export default function TransactionForm({
     try {
       await createTransaction(payload);
       setToastMessage({
-        message: "Transaksi berhasil disimpan!",
-        type: "success",
+        message: 'Transaksi berhasil disimpan!',
+        type: 'success',
       });
       setSelectedProducts([]); // Reset form
-      navigate("/transactions");
+      navigate('/transactions');
     } catch {
       setIsLoading(false);
       setToastMessage({
-        message: "Gagal menyimpan transaksi.",
-        type: "error",
+        message: 'Gagal menyimpan transaksi.',
+        type: 'error',
       });
     } finally {
       setIsLoading(false);
@@ -306,20 +307,20 @@ export default function TransactionForm({
         <div className="text-center mb-4">
           <h1 className="text-lg font-bold">Input Transaksi</h1>
           <div className="text-xs text-gray-500 mt-1">
-            {new Date().toLocaleDateString("id-ID", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-              year: "numeric",
+            {new Date().toLocaleDateString('id-ID', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
             })}
           </div>
         </div>
 
-        {toastMessage.message != "" && (
+        {toastMessage.message != '' && (
           <Toast
             message={toastMessage.message}
             type={toastMessage.type}
-            onClose={() => setToastMessage({ type: undefined, message: "" })}
+            onClose={() => setToastMessage({ type: undefined, message: '' })}
           />
         )}
 
@@ -366,7 +367,7 @@ export default function TransactionForm({
                     {/* Price */}
                     <div className="ml-2">
                       <div className="text-xs font-medium">
-                        Rp {product.price.toLocaleString()}
+                        {formatCurrencyRp(product.price)}
                       </div>
                     </div>
                   </div>
@@ -428,9 +429,9 @@ export default function TransactionForm({
                       </svg>
                     </button>
                     <div className="text-xs font-medium">
-                      Subtotal:{" "}
+                      Subtotal:{' '}
                       <span className="text-sm font-semibold">
-                        Rp {product.subtotal.toLocaleString()}
+                        {formatCurrencyRp(product.subtotal)}
                       </span>
                     </div>
                   </div>
@@ -442,7 +443,7 @@ export default function TransactionForm({
             <div className="mt-4 pt-3 border-t border-gray-300 flex justify-between items-center">
               <span className="font-bold text-sm">TOTAL:</span>
               <span className="text-blue-600 font-bold text-lg">
-                Rp {totalAmount.toLocaleString()}
+                {formatCurrencyRp(totalAmount)}
               </span>
             </div>
           </div>
@@ -455,7 +456,7 @@ export default function TransactionForm({
             className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition font-medium shadow-md w-full text-sm"
             disabled={isLoading || selectedProducts.length === 0}
           >
-            {isLoading ? "Menyimpan..." : "Simpan Transaksi"}
+            {isLoading ? 'Menyimpan...' : 'Simpan Transaksi'}
           </button>
         </div>
       </div>

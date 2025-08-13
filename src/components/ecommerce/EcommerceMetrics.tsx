@@ -3,16 +3,13 @@ import {
   ShoppingCartIcon,
 } from "@heroicons/react/24/outline";
 import { ITransactionSummary } from "../../interface/transaction.interface";
+import { formatCurrencyRp } from "../../util/formatCurrency";
 
 interface Props {
   summary: ITransactionSummary;
 }
 
 export default function EcommerceMetrics({ summary }: Props) {
-  const formatCurrency = (value: number) => {
-    return `Rp ${value.toLocaleString("id-ID")}`;
-  };
-
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
       {/* Total Order */}
@@ -48,13 +45,13 @@ export default function EcommerceMetrics({ summary }: Props) {
             Total Pendapatan
           </span>
           <h4 className="font-bold text-gray-800 text-title-sm dark:text-white/90">
-            {formatCurrency(summary.totalIncome)}
+            {formatCurrencyRp(summary.totalIncome)}
           </h4>
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Bulan Ini: {formatCurrency(summary.totalIncomeThisMonth)}
+            Bulan Ini: {formatCurrencyRp(summary.totalIncomeThisMonth)}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Hari Ini: {formatCurrency(summary.totalIncomeToday)}
+            Hari Ini: {formatCurrencyRp(summary.totalIncomeToday)}
           </p>
         </div>
       </div>

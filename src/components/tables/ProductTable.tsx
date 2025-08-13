@@ -4,17 +4,18 @@ import {
   TableCell,
   TableHeader,
   TableRow,
-} from "../ui/table";
+} from '../ui/table';
 
 // import Badge from "../../ui/badge/Badge";
-import { IProduct } from "../../interface/product.inteface";
-import { useCallback, useEffect, useState } from "react";
-import { getProducts } from "../../service/product.service";
-import Toast from "../toast/ErrorToast";
-import { IPagination } from "../../interface/common.interface";
-import { Link, useNavigate } from "react-router";
-import { IToastMessage } from "../../interface/toast.interface";
-import { IMAGE_URL } from "../../lib/envVariable";
+import { IProduct } from '../../interface/product.inteface';
+import { useCallback, useEffect, useState } from 'react';
+import { getProducts } from '../../service/product.service';
+import Toast from '../toast/ErrorToast';
+import { IPagination } from '../../interface/common.interface';
+import { Link, useNavigate } from 'react-router';
+import { IToastMessage } from '../../interface/toast.interface';
+import { IMAGE_URL } from '../../lib/envVariable';
+import { formatCurrencyRp } from '../../util/formatCurrency';
 
 export default function ProductTable() {
   const navigate = useNavigate();
@@ -26,9 +27,9 @@ export default function ProductTable() {
   const [currentPage, setCurrentPage] = useState(1);
   const [toastMessage, setToastMessage] = useState<IToastMessage>({
     type: undefined,
-    message: "",
+    message: '',
   });
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Hitung nilai-nilai derivatif dari state yang ada
   const totalRecords = products.totalRecords;
@@ -42,12 +43,12 @@ export default function ProductTable() {
       setProducts(data?.data);
       setToastMessage({
         type: undefined,
-        message: "",
+        message: '',
       });
     } catch {
       setToastMessage({
-        message: "Gagal mengambil data produk.",
-        type: "error",
+        message: 'Gagal mengambil data produk.',
+        type: 'error',
       });
     }
   }, [currentPage, searchQuery, limit]);
@@ -78,12 +79,12 @@ export default function ProductTable() {
 
   function formatRangePrice(min: number, max: number) {
     if (min === max) return `${min}`;
-    return `Rp${min.toLocaleString()} - Rp${max.toLocaleString()}`;
+    return `${formatCurrencyRp(min)} - ${formatCurrencyRp(max)}`;
   }
 
   function getStockRange(product: IProduct) {
     if (!product.variants?.length) {
-      return product.stock?.toString() ?? "0";
+      return product.stock?.toString() ?? '0';
     }
 
     const stocks = product.variants.map((v) => v.stock || 0);
@@ -93,7 +94,7 @@ export default function ProductTable() {
 
   function getPriceRange(product: IProduct) {
     if (!product.variants?.length) {
-      return `Rp${(product.price ?? 0).toLocaleString()}`;
+      return `${formatCurrencyRp(product.price ?? 0)}`;
     }
 
     const prices = product.variants.map((v) => v.price || 0);
@@ -102,7 +103,7 @@ export default function ProductTable() {
 
   const renderPaginationNumbers = () => {
     const pages = [];
-    if (currentPage > 2) pages.push(1, "...");
+    if (currentPage > 2) pages.push(1, '...');
 
     for (
       let i = Math.max(1, currentPage - 1);
@@ -112,7 +113,7 @@ export default function ProductTable() {
       pages.push(i);
     }
 
-    if (currentPage < totalPages - 1) pages.push("...", totalPages);
+    if (currentPage < totalPages - 1) pages.push('...', totalPages);
 
     return pages;
   };
@@ -120,16 +121,16 @@ export default function ProductTable() {
   return (
     <div>
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-        {toastMessage.message != "" && (
+        {toastMessage.message != '' && (
           <>
             <Toast
               message={toastMessage.message}
               type={toastMessage.type} // Pastikan type diberikan
-              onClose={() => setToastMessage({ type: undefined, message: "" })}
+              onClose={() => setToastMessage({ type: undefined, message: '' })}
             />
           </>
         )}
-       {/* Search dan Tombol Aksi */}
+        {/* Search dan Tombol Aksi */}
         <div className="flex flex-col-reverse items-center justify-between gap-4 p-4 sm:flex-row">
           {/* Search di bawah saat mobile */}
           <div className="relative w-full sm:w-64">
@@ -178,7 +179,7 @@ export default function ProductTable() {
               </svg>
               Stok Produk
             </Link>
-           <Link
+            <Link
               to="/produk/form"
               className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 sm:w-auto"
             >
@@ -287,14 +288,14 @@ export default function ProductTable() {
 
             {/* Tombol nomor halaman */}
             {renderPaginationNumbers().map((page, idx) =>
-              typeof page === "number" ? (
+              typeof page === 'number' ? (
                 <button
                   key={idx}
                   onClick={() => handlePageChange(page)}
                   className={`h-8 w-8 rounded-lg text-sm font-medium ${
                     currentPage === page
-                      ? "bg-blue-500 text-white"
-                      : "text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
                   }`}
                 >
                   {page}
@@ -303,7 +304,7 @@ export default function ProductTable() {
                 <span key={idx} className="text-gray-500 px-1">
                   {page}
                 </span>
-              )
+              ),
             )}
 
             <button

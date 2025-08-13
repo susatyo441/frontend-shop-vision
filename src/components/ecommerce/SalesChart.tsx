@@ -5,21 +5,14 @@ import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { MoreDotIcon } from "../../icons";
 import { useState } from "react";
 import { ISalesChartProps } from "../../interface/salesChart.interface";
+import { formatCurrencyShort } from "../../util/formatCurrency";
 
 export default function SalesChart({
   categories,
   data,
   title,
 }: ISalesChartProps) {
-  function formatCurrencyShort(value: number): string {
-    if (value >= 1000000) {
-      return `Rp ${(value / 1000000).toFixed(1).replace(/\.0$/, "")}m`;
-    } else if (value >= 1000 && value < 1000000) {
-      return `Rp ${(value / 1000).toFixed(0)}rb`;
-    } else {
-      return `Rp ${value.toLocaleString("id-ID")}`;
-    }
-  }
+
 
   const options: ApexOptions = {
     colors: ["#465fff"],
