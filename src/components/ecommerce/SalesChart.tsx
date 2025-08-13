@@ -12,13 +12,15 @@ export default function SalesChart({
   title,
 }: ISalesChartProps) {
   function formatCurrencyShort(value: number): string {
+    var formattedValue:string;
     if (value >= 1000000) {
-      return `Rp ${(value / 1000000).toFixed(1).replace(/\.0$/, "")}m`;
+      formattedValue= `${(value / 1000000).toFixed(1).replace(/\.0$/, "")}m`;
     } else if (value >= 1000 && value < 1000000) {
-      return `Rp ${(value / 1000).toFixed(0)}rb`;
+      formattedValue = `${(value / 1000).toFixed(0)}rb`;
     } else {
-      return `Rp ${value.toLocaleString("id-ID")}`;
+      formattedValue = `${value.toLocaleString("id-ID")}`;
     }
+    return `${formattedValue} Koin`;
   }
 
   const options: ApexOptions = {

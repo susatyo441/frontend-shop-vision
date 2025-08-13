@@ -15,6 +15,7 @@ import { IPagination } from "../../interface/common.interface";
 import { Link, useNavigate } from "react-router";
 import { IToastMessage } from "../../interface/toast.interface";
 import { IMAGE_URL } from "../../lib/envVariable";
+import { formatCurrencyKoin } from "../../util/formatCurrency";
 
 export default function ProductTable() {
   const navigate = useNavigate();
@@ -78,7 +79,7 @@ export default function ProductTable() {
 
   function formatRangePrice(min: number, max: number) {
     if (min === max) return `${min}`;
-    return `Rp${min.toLocaleString()} - Rp${max.toLocaleString()}`;
+    return `${formatCurrencyKoin(min)} - ${formatCurrencyKoin(max)}`;
   }
 
   function getStockRange(product: IProduct) {
@@ -93,7 +94,7 @@ export default function ProductTable() {
 
   function getPriceRange(product: IProduct) {
     if (!product.variants?.length) {
-      return `Rp${(product.price ?? 0).toLocaleString()}`;
+      return formatCurrencyKoin((product.price ?? 0));
     }
 
     const prices = product.variants.map((v) => v.price || 0);

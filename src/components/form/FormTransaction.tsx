@@ -8,6 +8,7 @@ import { ICreateTransaction } from "../../interface/transaction.interface";
 import ComponentCard from "../../components/common/ComponentCard";
 import { useNavigate } from "react-router";
 import LoadingToast from "../../components/loading/ToastLoading";
+import { formatCurrencyKoin } from "../../util/formatCurrency";
 
 interface Product {
   _id: string;
@@ -366,7 +367,7 @@ export default function TransactionForm({
                     {/* Price */}
                     <div className="ml-2">
                       <div className="text-xs font-medium">
-                        Rp {product.price.toLocaleString()}
+                        {formatCurrencyKoin(product.price)}
                       </div>
                     </div>
                   </div>
@@ -430,7 +431,7 @@ export default function TransactionForm({
                     <div className="text-xs font-medium">
                       Subtotal:{" "}
                       <span className="text-sm font-semibold">
-                        Rp {product.subtotal.toLocaleString()}
+                          {formatCurrencyKoin(product.subtotal)}
                       </span>
                     </div>
                   </div>
@@ -442,7 +443,7 @@ export default function TransactionForm({
             <div className="mt-4 pt-3 border-t border-gray-300 flex justify-between items-center">
               <span className="font-bold text-sm">TOTAL:</span>
               <span className="text-blue-600 font-bold text-lg">
-                Rp {totalAmount.toLocaleString()}
+                {formatCurrencyKoin(totalAmount)}
               </span>
             </div>
           </div>

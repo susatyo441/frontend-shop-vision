@@ -5,3 +5,6 @@ export function formatCurrency(value: number) {
     .format(value)
     .replace(/,/g, ".");
 }
+export const formatCurrencyKoin = (value: number) => {
+  return `${value.toLocaleString("id-ID")} Koin`;
+};

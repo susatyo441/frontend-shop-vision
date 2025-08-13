@@ -14,6 +14,7 @@ import Toast from "../toast/ErrorToast";
 import { IMAGE_URL } from "../../lib/envVariable";
 import { Link } from "react-router";
 import React from "react";
+import { formatCurrencyKoin } from "../../util/formatCurrency";
 
 export default function RecentOrders() {
   const [transactions, setTransactions] = useState<IPagination<ITransaction>>({
@@ -167,8 +168,8 @@ export default function RecentOrders() {
                       </div>
                       <div className="break-words">
                         <span>
-                          <strong>Total Harga:</strong> Rp{" "}
-                          {transaction.totalPrice.toLocaleString("id-ID")}
+                          <strong>Total Harga:</strong>
+                          {transaction.totalPrice.toLocaleString("id-ID")} Koin
                         </span>
                       </div>
                     </div>
@@ -198,13 +199,13 @@ export default function RecentOrders() {
                       </div>
                     </TableCell>
                     <TableCell className="w-[20%] py-2 sm:py-3 text-gray-500 dark:text-gray-400">
-                      Rp {product.price.toLocaleString()}
+                      {formatCurrencyKoin(product.price)}
                     </TableCell>
                     <TableCell className="w-[15%] py-2 sm:py-3 text-gray-500 dark:text-gray-400">
                       {product.quantity}
                     </TableCell>
                     <TableCell className="w-[20%] py-2 sm:py-3 text-gray-500 dark:text-gray-400">
-                      Rp {product.totalPrice.toLocaleString()}
+                      {formatCurrencyKoin(product.totalPrice)}
                     </TableCell>
                   </TableRow>
                 ))}
